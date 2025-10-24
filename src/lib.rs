@@ -223,3 +223,15 @@ mod format_aware_tests;
 
 #[cfg(test)]
 mod plugin_ecosystem_tests;
+
+#[cfg(test)]
+mod edge_case_tests;
+
+#[cfg(test)]
+mod custom_config_tests;
+
+#[cfg(test)]
+mod real_world_tests;
+
+#[cfg(test)]
+mod performance_tests;
