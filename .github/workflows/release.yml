@@ -9,27 +9,63 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  create-release:
-    name: Create Release
+  build-and-release:
+    name: Build and Release
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      version: ${{ steps.get_version.outputs.version }}
+    permissions:
+      contents: write
     steps:
+      - uses: actions/checkout@v4
+      
       - name: Get version from tag
         id: get_version
         run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
       
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          targets: wasm32-unknown-unknown
+      
+      - name: Build WASM (Release)
+        run: cargo build --release --target wasm32-unknown-unknown
+      
+      - name: Verify WASM file
+        run: |
+          ls -lh target/wasm32-unknown-unknown/release/dprint_plugin_tailwindcss.wasm
+          file target/wasm32-unknown-unknown/release/dprint_plugin_tailwindcss.wasm
+      
+      - name: Create plugin info JSON
+        run: |
+          cat > plugin-info.json << 'EOF'
+          {
+            "schemaVersion": 4,
+            "name": "dprint-plugin-tailwindcss",
+            "version": "${{ steps.get_version.outputs.version }}",
+            "linux-x86_64": {
+              "reference": "https://github.com/friedjoff/dprint-plugin-tailwindcss/releases/download/v${{ steps.get_version.outputs.version }}/dprint_plugin_tailwindcss.wasm",
+              "checksum": ""
+            },
+            "mac-x86_64": {
+              "reference": "https://github.com/friedjoff/dprint-plugin-tailwindcss/releases/download/v${{ steps.get_version.outputs.version }}/dprint_plugin_tailwindcss.wasm",
+              "checksum": ""
+            },
+            "mac-aarch64": {
+              "reference": "https://github.com/friedjoff/dprint-plugin-tailwindcss/releases/download/v${{ steps.get_version.outputs.version }}/dprint_plugin_tailwindcss.wasm",
+              "checksum": ""
+            },
+            "windows-x86_64": {
+              "reference": "https://github.com/friedjoff/dprint-plugin-tailwindcss/releases/download/v${{ steps.get_version.outputs.version }}/dprint_plugin_tailwindcss.wasm",
+              "checksum": ""
+            }
+          }
+          EOF
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            target/wasm32-unknown-unknown/release/dprint_plugin_tailwindcss.wasm
+            plugin-info.json
           body: |
             ## dprint-plugin-tailwindcss ${{ steps.get_version.outputs.version }}
             
@@ -47,69 +83,5 @@ jobs:
             ### Changes
             
             See [CHANGELOG.md](https://github.com/friedjoff/dprint-plugin-tailwindcss/blob/main/CHANGELOG.md) for details.
-
-  build-and-upload:
-    name: Build and Upload WASM
-    needs: create-release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-      
-      - name: Build WASM (Release)
-        run: cargo build --release --target wasm32-unknown-unknown
-      
-      - name: Verify WASM file
-        run: |
-          ls -lh target/wasm32-unknown-unknown/release/dprint_plugin_tailwindcss.wasm
-          file target/wasm32-unknown-unknown/release/dprint_plugin_tailwindcss.wasm
-      
-      - name: Upload WASM to Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/wasm32-unknown-unknown/release/dprint_plugin_tailwindcss.wasm
-          asset_name: dprint_plugin_tailwindcss.wasm
-          asset_content_type: application/wasm
-      
-      - name: Create plugin info JSON
-        run: |
-          cat > plugin-info.json << 'EOF'
-          {
-            "schemaVersion": 4,
-            "name": "dprint-plugin-tailwindcss",
-            "version": "${{ needs.create-release.outputs.version }}",
-            "linux-x86_64": {
-              "reference": "https://github.com/friedjoff/dprint-plugin-tailwindcss/releases/download/v${{ needs.create-release.outputs.version }}/dprint_plugin_tailwindcss.wasm",
-              "checksum": ""
-            },
-            "mac-x86_64": {
-              "reference": "https://github.com/friedjoff/dprint-plugin-tailwindcss/releases/download/v${{ needs.create-release.outputs.version }}/dprint_plugin_tailwindcss.wasm",
-              "checksum": ""
-            },
-            "mac-aarch64": {
-              "reference": "https://github.com/friedjoff/dprint-plugin-tailwindcss/releases/download/v${{ needs.create-release.outputs.version }}/dprint_plugin_tailwindcss.wasm",
-              "checksum": ""
-            },
-            "windows-x86_64": {
-              "reference": "https://github.com/friedjoff/dprint-plugin-tailwindcss/releases/download/v${{ needs.create-release.outputs.version }}/dprint_plugin_tailwindcss.wasm",
-              "checksum": ""
-            }
-          }
-          EOF
-      
-      - name: Upload plugin info JSON
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./plugin-info.json
-          asset_name: plugin-info.json
-          asset_content_type: application/json
+          draft: false
+          prerelease: false
