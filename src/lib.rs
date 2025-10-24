@@ -235,3 +235,6 @@ mod real_world_tests;
 
 #[cfg(test)]
 mod performance_tests;
+
+#[cfg(test)]
+mod prettier_compat_tests;
