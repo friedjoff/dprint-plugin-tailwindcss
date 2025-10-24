@@ -1,0 +1,6 @@
+{
+  "tailwindcss": {
+    "unknownProperty": "value",
+    "anotherUnknown": 123
+  }
+}

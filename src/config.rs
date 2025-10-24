@@ -128,7 +128,6 @@ fn get_nullable_vec(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     #[test]
     fn test_default_config() {
@@ -140,10 +139,14 @@ mod tests {
 
     #[test]
     fn test_resolve_config_with_custom_values() {
+        use dprint_core::configuration::ConfigKeyValue;
+        
         let mut config_map = ConfigKeyMap::new();
-        config_map.insert("enabled".to_string(), json!(false));
-        config_map.insert("tailwindConfig".to_string(), json!("./tailwind.config.js"));
-        config_map.insert("tailwindFunctions".to_string(), json!(["cn"]));
+        config_map.insert("enabled".to_string(), ConfigKeyValue::Bool(false));
+        config_map.insert("tailwindConfig".to_string(), ConfigKeyValue::String("./tailwind.config.js".to_string()));
+        config_map.insert("tailwindFunctions".to_string(), ConfigKeyValue::Array(vec![
+            ConfigKeyValue::String("cn".to_string())
+        ]));
 
         let global_config = GlobalConfiguration::default();
         let result = resolve_config(config_map, &global_config);
@@ -155,5 +158,132 @@ mod tests {
         );
         assert_eq!(result.config.tailwind_functions, vec!["cn"]);
         assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_resolve_config_with_all_custom_values() {
+        use dprint_core::configuration::ConfigKeyValue;
+        
+        let mut config_map = ConfigKeyMap::new();
+        config_map.insert("enabled".to_string(), ConfigKeyValue::Bool(true));
+        config_map.insert("tailwindConfig".to_string(), ConfigKeyValue::String("./custom/tailwind.config.js".to_string()));
+        config_map.insert("tailwindFunctions".to_string(), ConfigKeyValue::Array(vec![
+            ConfigKeyValue::String("cn".to_string()),
+            ConfigKeyValue::String("classNames".to_string()),
+            ConfigKeyValue::String("tw".to_string()),
+        ]));
+        config_map.insert("tailwindAttributes".to_string(), ConfigKeyValue::Array(vec![
+            ConfigKeyValue::String("class".to_string()),
+            ConfigKeyValue::String("className".to_string()),
+            ConfigKeyValue::String("classList".to_string()),
+        ]));
+
+        let global_config = GlobalConfiguration::default();
+        let result = resolve_config(config_map, &global_config);
+
+        assert!(result.config.enabled);
+        assert_eq!(
+            result.config.tailwind_config,
+            Some("./custom/tailwind.config.js".to_string())
+        );
+        assert_eq!(result.config.tailwind_functions, vec!["cn", "classNames", "tw"]);
+        assert_eq!(result.config.tailwind_attributes, vec!["class", "className", "classList"]);
+        assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_resolve_config_with_invalid_type() {
+        use dprint_core::configuration::ConfigKeyValue;
+        
+        let mut config_map = ConfigKeyMap::new();
+        config_map.insert("enabled".to_string(), ConfigKeyValue::String("true".to_string()));
+        config_map.insert("tailwindFunctions".to_string(), ConfigKeyValue::String("not an array".to_string()));
+
+        let global_config = GlobalConfiguration::default();
+        let result = resolve_config(config_map, &global_config);
+
+        // enabled should use default value when type is wrong
+        assert!(result.config.enabled);
+        // tailwindFunctions should use default value and produce diagnostic
+        assert_eq!(result.config.tailwind_functions.len(), 5);
+        assert!(!result.diagnostics.is_empty());
+        assert!(result.diagnostics.iter().any(|d| d.property_name == "tailwindFunctions"));
+    }
+
+    #[test]
+    fn test_resolve_config_with_unknown_properties() {
+        use dprint_core::configuration::ConfigKeyValue;
+        
+        let mut config_map = ConfigKeyMap::new();
+        config_map.insert("unknownProperty".to_string(), ConfigKeyValue::String("value".to_string()));
+        config_map.insert("anotherUnknown".to_string(), ConfigKeyValue::Number(123));
+
+        let global_config = GlobalConfiguration::default();
+        let result = resolve_config(config_map, &global_config);
+
+        // Should use default config
+        assert!(result.config.enabled);
+        // Should report unknown properties
+        assert_eq!(result.diagnostics.len(), 2);
+        assert!(result.diagnostics.iter().any(|d| d.property_name == "unknownProperty"));
+        assert!(result.diagnostics.iter().any(|d| d.property_name == "anotherUnknown"));
+    }
+
+    #[test]
+    fn test_resolve_config_with_invalid_array_elements() {
+        use dprint_core::configuration::ConfigKeyValue;
+        
+        let mut config_map = ConfigKeyMap::new();
+        config_map.insert("tailwindFunctions".to_string(), ConfigKeyValue::Array(vec![
+            ConfigKeyValue::String("valid".to_string()),
+            ConfigKeyValue::Number(123), // Invalid type
+            ConfigKeyValue::String("also_valid".to_string()),
+        ]));
+
+        let global_config = GlobalConfiguration::default();
+        let result = resolve_config(config_map, &global_config);
+
+        // Should use default value and produce diagnostic
+        assert_eq!(result.config.tailwind_functions.len(), 5);
+        assert!(!result.diagnostics.is_empty());
+        assert!(result.diagnostics.iter().any(|d| {
+            d.property_name == "tailwindFunctions" && d.message.contains("array of strings")
+        }));
+    }
+
+    #[test]
+    fn test_resolve_config_empty() {
+        let config_map = ConfigKeyMap::new();
+        let global_config = GlobalConfiguration::default();
+        let result = resolve_config(config_map, &global_config);
+
+        // Should use all default values
+        assert!(result.config.enabled);
+        assert_eq!(result.config.tailwind_config, None);
+        assert_eq!(result.config.tailwind_functions, vec![
+            "classnames".to_string(),
+            "clsx".to_string(),
+            "ctl".to_string(),
+            "cva".to_string(),
+            "tw".to_string(),
+        ]);
+        assert_eq!(result.config.tailwind_attributes, vec!["class".to_string(), "className".to_string()]);
+        assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_file_matching_extensions() {
+        let config_map = ConfigKeyMap::new();
+        let global_config = GlobalConfiguration::default();
+        let result = resolve_config(config_map, &global_config);
+
+        let extensions = &result.file_matching.file_extensions;
+        assert!(extensions.contains(&"html".to_string()));
+        assert!(extensions.contains(&"htm".to_string()));
+        assert!(extensions.contains(&"jsx".to_string()));
+        assert!(extensions.contains(&"tsx".to_string()));
+        assert!(extensions.contains(&"vue".to_string()));
+        assert!(extensions.contains(&"svelte".to_string()));
+        assert!(extensions.contains(&"astro".to_string()));
     }
 }

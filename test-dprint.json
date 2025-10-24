@@ -1,0 +1,5 @@
+{
+  "plugins": [
+    "file:///workspaces/dprint-plugin-tailwindcss/target/wasm32-unknown-unknown/release/dprint_plugin_tailwindcss.wasm"
+  ]
+}

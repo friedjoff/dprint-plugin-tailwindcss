@@ -10,35 +10,35 @@ This plugin sorts and formats TailwindCSS class names in your code, similar to [
 
 ### 1. Project Setup
 
-- [ ] Initialize Rust project with Wasm target support
+- [x] Initialize Rust project with Wasm target support
   - Create `Cargo.toml` with dependencies: `dprint-core`, `wasm-bindgen`, `serde`, `serde_json`
   - Set crate type to `["cdylib"]` for Wasm compilation
-- [ ] Set up build configuration for Wasm32 target
+- [x] Set up build configuration for Wasm32 target
   - Configure `wasm-pack` or manual `wasm32-unknown-unknown` compilation
-- [ ] Create plugin schema configuration structure
-- [ ] **Verify:** Build project successfully with `cargo build --target wasm32-unknown-unknown` and confirm `.wasm` file is generated
+- [x] Create plugin schema configuration structure
+- [x] **Verify:** Build project successfully with `cargo build --target wasm32-unknown-unknown` and confirm `.wasm` file is generated
 
 ### 2. Core Plugin Structure
 
 Following [dprint Wasm plugin development docs](https://github.com/dprint/dprint/blob/main/docs/wasm-plugin-development.md):
 
-- [ ] Implement required exports:
+- [x] Implement required exports:
   - `get_plugin_info()` - Returns plugin metadata (name, version, config schema)
   - `get_license_text()` - Returns MIT license text
   - `get_resolved_config(config: &str)` - Parses and validates configuration
   - `set_global_config(global_config: &str)` - Sets global dprint config
   - `set_file_path(file_path: &str)` - Sets current file being formatted
   - `format(file_text: &str, range: &FormatRange, override_config: &str)` - Main formatting function
-- [ ] **Verify:** Load plugin in dprint with `dprint config add <plugin-url>` and run `dprint --plugins` to confirm plugin is recognized
+- [x] **Verify:** Load plugin in dprint with `dprint config add <plugin-url>` and run `dprint --plugins` to confirm plugin is recognized
 
 ### 3. Configuration Options
 
-- [ ] Define configuration schema:
+- [x] Define configuration schema:
   - `tailwindConfig` - Path to tailwind.config.js (optional)
   - `tailwindFunctions` - Custom function names containing class lists (default: `["classnames", "clsx", "ctl", "cva", "tw"]`)
   - `tailwindAttributes` - HTML attributes to format (default: `["class", "className"]`)
   - `enabled` - Enable/disable the plugin (default: `true`)
-- [ ] **Verify:** Test config parsing with valid and invalid configurations, confirm appropriate error messages are returned for invalid configs
+- [x] **Verify:** Test config parsing with valid and invalid configurations, confirm appropriate error messages are returned for invalid configs
 
 ### 4. TailwindCSS Class Sorting Logic
 

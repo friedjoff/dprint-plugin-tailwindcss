@@ -1,0 +1,6 @@
+{
+  "tailwindcss": {
+    "enabled": "true",
+    "tailwindFunctions": "not an array"
+  }
+}

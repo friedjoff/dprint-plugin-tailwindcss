@@ -1,0 +1,8 @@
+{
+  "tailwindcss": {
+    "enabled": true,
+    "tailwindConfig": "./custom/tailwind.config.js",
+    "tailwindFunctions": ["cn", "classNames", "tw"],
+    "tailwindAttributes": ["class", "className", "classList"]
+  }
+}
