@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+target/
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+.astro/
+
+# Release artifacts
+release/
+
+# Test artifacts
+coverage/
+.nyc_output/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Minified files
+**/*.min.js
+**/*.min.css
+**/*.bundle.js
+
+# Lock files (optional - uncomment if needed)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Generated files
+**/*.generated.*
+**/generated/**
+
+# Documentation build
+docs/.vitepress/dist/
+docs/.vitepress/cache/
