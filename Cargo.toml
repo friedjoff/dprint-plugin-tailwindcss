@@ -1,0 +1,24 @@
+[package]
+name = "dprint-plugin-tailwindcss"
+version = "0.1.0"
+edition = "2021"
+authors = ["friedjoff"]
+license = "MIT"
+description = "dprint Wasm plugin for TailwindCSS class sorting"
+repository = "https://github.com/friedjoff/dprint-plugin-tailwindcss"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+dprint-core = { version = "0.67", features = ["wasm"] }
+wasm-bindgen = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable link-time optimization
+codegen-units = 1   # Reduce code generation units for better optimization
+strip = true        # Strip symbols from binary
