@@ -1,13 +1,13 @@
 /// Additional integration tests for format-aware parsing
-/// 
+///
 /// These tests verify that the FormatParser correctly handles
 /// different file formats and preserves their structure.
 
 #[cfg(test)]
 mod format_aware_tests {
     use crate::config::Configuration;
-    use crate::parser::{FileFormat, FormatParser};
     use crate::extractor::ClassExtractor;
+    use crate::parser::{FileFormat, FormatParser};
 
     fn create_test_config() -> Configuration {
         Configuration {
@@ -51,11 +51,11 @@ export default {
 "#;
 
         let matches = parser.parse(content, FileFormat::Vue);
-        
+
         // Should only find the one in the template section
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].content, "z-10 p-4 mt-2");
-        
+
         // Verify the match is in the template section
         assert!(matches[0].start > content.find("<template>").unwrap());
         assert!(matches[0].end < content.find("</template>").unwrap());
@@ -89,33 +89,33 @@ export default {
 "#;
 
         let matches = parser.parse(content, FileFormat::Svelte);
-        
+
         // Should find exactly 3 matches (excluding script and style sections)
         assert_eq!(matches.len(), 3);
-        
+
         let class_strings: Vec<&str> = matches.iter().map(|m| m.content.as_str()).collect();
         assert!(class_strings.contains(&"z-10 p-4 mt-2"));
         assert!(class_strings.contains(&"text-white bg-blue-500"));
         assert!(class_strings.contains(&"flex items-center"));
-        
+
         // Verify none of the matches are in script or style sections
         for m in &matches {
             let before_match = &content[..m.start];
             let after_match = &content[m.end..];
-            
+
             // Count script tags before and after
             let scripts_before = before_match.matches("<script").count();
             let scripts_after = after_match.matches("</script>").count();
             let total_scripts = content.matches("<script").count();
-            
+
             // Match should not be inside a script tag
             assert_eq!(scripts_before, total_scripts - scripts_after);
-            
+
             // Count style tags before and after
             let styles_before = before_match.matches("<style").count();
             let styles_after = after_match.matches("</style>").count();
             let total_styles = content.matches("<style").count();
-            
+
             // Match should not be inside a style tag
             assert_eq!(styles_before, total_styles - styles_after);
         }
@@ -140,14 +140,14 @@ const className = "z-10 p-4 mt-2"; // TypeScript - should NOT be parsed
 "#;
 
         let matches = parser.parse(content, FileFormat::Astro);
-        
+
         // Should find 2 matches (both in markup, not in frontmatter)
         assert_eq!(matches.len(), 2);
-        
+
         let class_strings: Vec<&str> = matches.iter().map(|m| m.content.as_str()).collect();
         assert!(class_strings.contains(&"z-10 p-4 mt-2"));
         assert!(class_strings.contains(&"bg-blue-500 text-white"));
-        
+
         // Verify all matches are after the frontmatter section
         let frontmatter_end = content.find("---\n\n").unwrap() + 4;
         for m in &matches {
@@ -177,10 +177,10 @@ export function Button({ active }) {
 "#;
 
         let matches = parser.parse(content, FileFormat::Jsx);
-        
+
         // Should find both className attributes and clsx function call
         assert!(matches.len() >= 2);
-        
+
         let class_strings: Vec<&str> = matches.iter().map(|m| m.content.as_str()).collect();
         assert!(class_strings.contains(&"z-10 p-4 mt-2"));
         assert!(class_strings.contains(&"text-white font-bold"));
@@ -212,25 +212,28 @@ export function Button({ active }) {
 </html>"#;
 
         let matches = parser.parse(content, FileFormat::Html);
-        
+
         // Should find 3 class attributes
         assert_eq!(matches.len(), 3);
-        
+
         // Verify all matches point to actual class content
         for m in &matches {
             let extracted = &content[m.start..m.end];
             assert_eq!(extracted, m.content);
-            
+
             // Verify it's not inside a comment
             let before = &content[..m.start];
             let _after = &content[m.end..];
-            
+
             let comment_opens_before = before.matches("<!--").count();
             let comment_closes_before = before.matches("-->").count();
-            
+
             // If there are more opens than closes before, we're inside a comment
-            assert_eq!(comment_opens_before, comment_closes_before, 
-                "Match '{}' appears to be inside a comment", m.content);
+            assert_eq!(
+                comment_opens_before, comment_closes_before,
+                "Match '{}' appears to be inside a comment",
+                m.content
+            );
         }
     }
 
@@ -239,11 +242,23 @@ export function Button({ active }) {
         assert_eq!(FileFormat::from_path("src/App.jsx"), Some(FileFormat::Jsx));
         assert_eq!(FileFormat::from_path("src/App.tsx"), Some(FileFormat::Tsx));
         assert_eq!(FileFormat::from_path("src/App.vue"), Some(FileFormat::Vue));
-        assert_eq!(FileFormat::from_path("src/App.svelte"), Some(FileFormat::Svelte));
-        assert_eq!(FileFormat::from_path("src/pages/index.astro"), Some(FileFormat::Astro));
-        assert_eq!(FileFormat::from_path("public/index.html"), Some(FileFormat::Html));
-        assert_eq!(FileFormat::from_path("public/page.htm"), Some(FileFormat::Html));
-        
+        assert_eq!(
+            FileFormat::from_path("src/App.svelte"),
+            Some(FileFormat::Svelte)
+        );
+        assert_eq!(
+            FileFormat::from_path("src/pages/index.astro"),
+            Some(FileFormat::Astro)
+        );
+        assert_eq!(
+            FileFormat::from_path("public/index.html"),
+            Some(FileFormat::Html)
+        );
+        assert_eq!(
+            FileFormat::from_path("public/page.htm"),
+            Some(FileFormat::Html)
+        );
+
         // Unknown formats should return None
         assert_eq!(FileFormat::from_path("styles.css"), None);
         assert_eq!(FileFormat::from_path("script.js"), None);
@@ -262,8 +277,14 @@ export function Button({ active }) {
         // Test each format to ensure positions are correct
         let test_cases = vec![
             (FileFormat::Html, r#"<div class="flex p-4">Content</div>"#),
-            (FileFormat::Jsx, r#"<div className="flex p-4">Content</div>"#),
-            (FileFormat::Vue, r#"<template><div class="flex p-4">Content</div></template>"#),
+            (
+                FileFormat::Jsx,
+                r#"<div className="flex p-4">Content</div>"#,
+            ),
+            (
+                FileFormat::Vue,
+                r#"<template><div class="flex p-4">Content</div></template>"#,
+            ),
             (FileFormat::Svelte, r#"<div class="flex p-4">Content</div>"#),
             (FileFormat::Astro, r#"<div class="flex p-4">Content</div>"#),
         ];
@@ -271,13 +292,15 @@ export function Button({ active }) {
         for (format, content) in test_cases {
             let matches = parser.parse(content, format);
             assert!(!matches.is_empty(), "No matches found for {:?}", format);
-            
+
             // Verify each match has correct positions
             for m in matches {
                 let extracted = &content[m.start..m.end];
-                assert_eq!(extracted, m.content, 
-                    "Position mismatch for {:?}: expected '{}', got '{}'", 
-                    format, m.content, extracted);
+                assert_eq!(
+                    extracted, m.content,
+                    "Position mismatch for {:?}: expected '{}', got '{}'",
+                    format, m.content, extracted
+                );
             }
         }
     }
@@ -312,17 +335,21 @@ const count = ref(0);
 "#;
 
         let matches = parser.parse(content, FileFormat::Vue);
-        
+
         // Should find multiple class attributes in the template
         assert!(matches.len() >= 5);
-        
+
         // Verify all are in template section
         let template_start = content.find("<template>").unwrap();
         let template_end = content.find("</template>").unwrap();
-        
+
         for m in &matches {
-            assert!(m.start > template_start && m.end < template_end,
-                "Match at {}..{} is outside template section", m.start, m.end);
+            assert!(
+                m.start > template_start && m.end < template_end,
+                "Match at {}..{} is outside template section",
+                m.start,
+                m.end
+            );
         }
     }
 
@@ -355,10 +382,10 @@ const count = ref(0);
 "#;
 
         let matches = parser.parse(content, FileFormat::Svelte);
-        
+
         // Should find class attributes (not the script section)
         assert_eq!(matches.len(), 3);
-        
+
         let class_strings: Vec<&str> = matches.iter().map(|m| m.content.as_str()).collect();
         assert!(class_strings.contains(&"container mx-auto"));
         assert!(class_strings.contains(&"z-10 p-4 mt-2"));
@@ -375,12 +402,12 @@ const count = ref(0);
 
         // For unknown formats, the plugin should still try to extract classes
         let content = r#"<div class="flex p-4">Content</div>"#;
-        
+
         // Directly use extractor (simulating unknown format fallback)
         let mut matches = extractor.extract_from_attributes(content);
         let function_matches = extractor.extract_from_functions(content);
         matches.extend(function_matches);
-        
+
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].content, "flex p-4");
     }

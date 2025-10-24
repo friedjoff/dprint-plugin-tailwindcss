@@ -1,5 +1,5 @@
 /// Plugin ecosystem integration tests
-/// 
+///
 /// Tests that verify compatibility with dprint's plugin ecosystem
 /// and ensure the plugin works well alongside other plugins.
 
@@ -7,12 +7,11 @@
 mod plugin_ecosystem_tests {
     use crate::config::Configuration;
     use crate::integration::PluginCompatibility;
+    use crate::TailwindCssPluginHandler;
     use dprint_core::configuration::{ConfigKeyMap, GlobalConfiguration};
     use dprint_core::plugins::{
-        FormatConfigId, NullCancellationToken,
-        SyncFormatRequest, SyncPluginHandler,
+        FormatConfigId, NullCancellationToken, SyncFormatRequest, SyncPluginHandler,
     };
-    use crate::TailwindCssPluginHandler;
     use std::path::Path;
 
     fn create_test_handler() -> TailwindCssPluginHandler {
@@ -45,7 +44,7 @@ mod plugin_ecosystem_tests {
         };
 
         let result = handler.format(request, |_| Ok(None));
-        
+
         match result {
             Ok(Some(bytes)) => Some(String::from_utf8(bytes).unwrap()),
             Ok(None) => None,
@@ -64,7 +63,7 @@ mod plugin_ecosystem_tests {
 }"#;
 
         let result = format_file(&mut handler, "config.json", json_content, config);
-        
+
         // JSON files should not be formatted by this plugin
         assert!(result.is_none());
     }
@@ -80,7 +79,7 @@ class: z-10 p-4 mt-2
 "#;
 
         let result = format_file(&mut handler, "config.yaml", yaml_content, config);
-        
+
         // YAML files should not be formatted by this plugin
         assert!(result.is_none());
     }
@@ -93,7 +92,7 @@ class: z-10 p-4 mt-2
         let html_content = r#"<div class="z-10 p-4 mt-2">Content</div>"#;
 
         let result = format_file(&mut handler, "index.html", html_content, config);
-        
+
         // HTML files should be formatted
         assert!(result.is_some());
         let formatted = result.unwrap();
@@ -108,7 +107,7 @@ class: z-10 p-4 mt-2
         let jsx_content = r#"<div className="z-10 p-4 mt-2">Content</div>"#;
 
         let result = format_file(&mut handler, "App.jsx", jsx_content, config);
-        
+
         // JSX files should be formatted
         assert!(result.is_some());
         let formatted = result.unwrap();
@@ -119,7 +118,7 @@ class: z-10 p-4 mt-2
     fn test_multiple_plugins_coexistence() {
         // This test verifies that our plugin can be used alongside other plugins
         // by ensuring it doesn't modify files meant for other plugins
-        
+
         let mut handler = create_test_handler();
         let config = create_test_config();
 
@@ -152,7 +151,7 @@ const classes = clsx("z-10 p-4 mt-2");
 "#;
 
         let result = format_file(&mut handler, "utils.ts", ts_content, config);
-        
+
         // Should format utility functions in TS files
         assert!(result.is_some());
         let formatted = result.unwrap();
@@ -170,7 +169,7 @@ const classes = clsx("z-10 p-4 mt-2");
 "#;
 
         let result = format_file(&mut handler, "README.md", md_content, config);
-        
+
         // Markdown with HTML should be formatted
         assert!(result.is_some());
         let formatted = result.unwrap();
@@ -189,10 +188,10 @@ const classes = clsx("z-10 p-4 mt-2");
         };
 
         let result = handler.resolve_config(config_map, &global_config);
-        
+
         // Global config should be accepted without errors
         assert!(result.diagnostics.is_empty());
-        
+
         // Our plugin uses global config for dprint integration
         // but doesn't use line_width/indent_width since we only
         // sort class names, not reformat HTML
@@ -206,7 +205,7 @@ const classes = clsx("z-10 p-4 mt-2");
         let global_config = GlobalConfiguration::default();
 
         let result = handler.resolve_config(config_map, &global_config);
-        
+
         // Verify file matching includes all supported extensions
         let extensions = &result.file_matching.file_extensions;
         assert!(extensions.contains(&"html".to_string()));
@@ -226,7 +225,7 @@ const classes = clsx("z-10 p-4 mt-2");
 
         let content = r#"<div class="z-10 p-4 mt-2">Content</div>"#;
         let result = format_file(&mut handler, "index.html", content, config);
-        
+
         // Disabled plugin should not format anything
         assert!(result.is_none());
     }
@@ -244,10 +243,10 @@ const classes = clsx("z-10 p-4 mt-2");
 <!-- Footer comment -->"#;
 
         let result = format_file(&mut handler, "index.html", content, config);
-        
+
         assert!(result.is_some());
         let formatted = result.unwrap();
-        
+
         // All comments should be preserved
         assert_eq!(formatted.matches("<!--").count(), 3);
         assert!(formatted.contains("<!-- Header comment -->"));
@@ -263,10 +262,10 @@ const classes = clsx("z-10 p-4 mt-2");
         let content = "  <div class=\"z-10 p-4 mt-2\">Content</div>  ";
 
         let result = format_file(&mut handler, "index.html", content, config);
-        
+
         assert!(result.is_some());
         let formatted = result.unwrap();
-        
+
         // Leading and trailing whitespace should be preserved
         assert!(formatted.starts_with("  "));
         assert!(formatted.ends_with("  "));
@@ -280,10 +279,10 @@ const classes = clsx("z-10 p-4 mt-2");
         let content = "<div class=\"z-10 p-4 mt-2\">\n  <span>Content</span>\n</div>";
 
         let result = format_file(&mut handler, "index.html", content, config);
-        
+
         assert!(result.is_some());
         let formatted = result.unwrap();
-        
+
         // Line breaks should be preserved
         assert_eq!(formatted.lines().count(), content.lines().count());
     }
@@ -294,7 +293,7 @@ const classes = clsx("z-10 p-4 mt-2");
         assert!(PluginCompatibility::should_format("index.html"));
         assert!(PluginCompatibility::should_format("App.jsx"));
         assert!(!PluginCompatibility::should_format("config.json"));
-        
+
         assert!(PluginCompatibility::should_defer("config.json"));
         assert!(PluginCompatibility::should_defer("Cargo.toml"));
         assert!(!PluginCompatibility::should_defer("index.html"));
@@ -309,7 +308,7 @@ const classes = clsx("z-10 p-4 mt-2");
         let content = r#"<div class="z-10 p-4 mt-2">Content</div>"#;
 
         let result = format_file(&mut handler, "template.twig", content, config);
-        
+
         // Should still attempt formatting with fallback
         assert!(result.is_some());
         let formatted = result.unwrap();
@@ -333,10 +332,10 @@ const x = 1;
 </style>"#;
 
         let result = format_file(&mut handler, "component.svelte", content, config);
-        
+
         assert!(result.is_some());
         let formatted = result.unwrap();
-        
+
         // Only class in div should be sorted, script/style untouched
         assert!(formatted.contains("mt-2 p-4 z-10"));
         assert!(formatted.contains("const x = 1;"));
@@ -355,13 +354,13 @@ const className = "z-10 p-4 mt-2"; // Should NOT be sorted
 <div class="z-10 p-4 mt-2">Should be sorted</div>"#;
 
         let result = format_file(&mut handler, "component.vue", content, config);
-        
+
         assert!(result.is_some());
         let formatted = result.unwrap();
-        
+
         // Script content should remain unchanged
         assert!(formatted.contains("const className = \"z-10 p-4 mt-2\";"));
-        
+
         // But div class should be sorted
         // Note: This depends on our Vue parser correctly excluding script sections
         // The actual test may need adjustment based on implementation
@@ -382,7 +381,7 @@ const className = "z-10 p-4 mt-2"; // Should NOT be sorted
 
         // Second format on already formatted content
         let result2 = format_file(&mut handler, "index.html", &formatted1, config);
-        
+
         // Should return None (no changes needed) since it's already formatted
         assert!(result2.is_none());
     }

@@ -1,5 +1,5 @@
 /// Custom configuration tests
-/// 
+///
 /// Tests for various configuration scenarios including custom functions,
 /// attributes, and configuration validation.
 
@@ -7,8 +7,8 @@
 mod custom_config_tests {
     use crate::config::Configuration;
     use crate::extractor::ClassExtractor;
-    use dprint_core::configuration::{ConfigKeyMap, ConfigKeyValue, GlobalConfiguration};
     use crate::TailwindCssPluginHandler;
+    use dprint_core::configuration::{ConfigKeyMap, ConfigKeyValue, GlobalConfiguration};
     use dprint_core::plugins::SyncPluginHandler;
 
     #[test]
@@ -75,9 +75,7 @@ mod custom_config_tests {
 
     #[test]
     fn test_config_with_many_functions() {
-        let functions: Vec<String> = (0..20)
-            .map(|i| format!("func{}", i))
-            .collect();
+        let functions: Vec<String> = (0..20).map(|i| format!("func{}", i)).collect();
 
         let config = Configuration {
             enabled: true,
@@ -121,7 +119,7 @@ mod custom_config_tests {
     fn test_resolve_config_with_custom_functions_array() {
         let mut handler = TailwindCssPluginHandler::new();
         let mut config_map = ConfigKeyMap::new();
-        
+
         // Create array of custom functions
         let functions = vec![
             ConfigKeyValue::String("myFunc1".to_string()),
@@ -137,16 +135,25 @@ mod custom_config_tests {
         let result = handler.resolve_config(config_map, &global_config);
 
         assert_eq!(result.config.tailwind_functions.len(), 3);
-        assert!(result.config.tailwind_functions.contains(&"myFunc1".to_string()));
-        assert!(result.config.tailwind_functions.contains(&"myFunc2".to_string()));
-        assert!(result.config.tailwind_functions.contains(&"myFunc3".to_string()));
+        assert!(result
+            .config
+            .tailwind_functions
+            .contains(&"myFunc1".to_string()));
+        assert!(result
+            .config
+            .tailwind_functions
+            .contains(&"myFunc2".to_string()));
+        assert!(result
+            .config
+            .tailwind_functions
+            .contains(&"myFunc3".to_string()));
     }
 
     #[test]
     fn test_resolve_config_with_custom_attributes_array() {
         let mut handler = TailwindCssPluginHandler::new();
         let mut config_map = ConfigKeyMap::new();
-        
+
         let attributes = vec![
             ConfigKeyValue::String("class".to_string()),
             ConfigKeyValue::String("styleName".to_string()),
@@ -160,15 +167,21 @@ mod custom_config_tests {
         let result = handler.resolve_config(config_map, &global_config);
 
         assert_eq!(result.config.tailwind_attributes.len(), 2);
-        assert!(result.config.tailwind_attributes.contains(&"class".to_string()));
-        assert!(result.config.tailwind_attributes.contains(&"styleName".to_string()));
+        assert!(result
+            .config
+            .tailwind_attributes
+            .contains(&"class".to_string()));
+        assert!(result
+            .config
+            .tailwind_attributes
+            .contains(&"styleName".to_string()));
     }
 
     #[test]
     fn test_resolve_config_with_tailwind_config_string() {
         let mut handler = TailwindCssPluginHandler::new();
         let mut config_map = ConfigKeyMap::new();
-        
+
         config_map.insert(
             "tailwindConfig".to_string(),
             ConfigKeyValue::String("./my-config.js".to_string()),
@@ -185,11 +198,8 @@ mod custom_config_tests {
     fn test_resolve_config_with_enabled_false() {
         let mut handler = TailwindCssPluginHandler::new();
         let mut config_map = ConfigKeyMap::new();
-        
-        config_map.insert(
-            "enabled".to_string(),
-            ConfigKeyValue::Bool(false),
-        );
+
+        config_map.insert("enabled".to_string(), ConfigKeyValue::Bool(false));
 
         let global_config = GlobalConfiguration::default();
         let result = handler.resolve_config(config_map, &global_config);
@@ -201,13 +211,13 @@ mod custom_config_tests {
     fn test_resolve_config_with_all_custom_values() {
         let mut handler = TailwindCssPluginHandler::new();
         let mut config_map = ConfigKeyMap::new();
-        
+
         config_map.insert("enabled".to_string(), ConfigKeyValue::Bool(true));
         config_map.insert(
             "tailwindConfig".to_string(),
             ConfigKeyValue::String("./tailwind.config.js".to_string()),
         );
-        
+
         let functions = vec![
             ConfigKeyValue::String("tw".to_string()),
             ConfigKeyValue::String("css".to_string()),
@@ -216,7 +226,7 @@ mod custom_config_tests {
             "tailwindFunctions".to_string(),
             ConfigKeyValue::Array(functions),
         );
-        
+
         let attributes = vec![
             ConfigKeyValue::String("class".to_string()),
             ConfigKeyValue::String("styleName".to_string()),
@@ -230,7 +240,10 @@ mod custom_config_tests {
         let result = handler.resolve_config(config_map, &global_config);
 
         assert!(result.config.enabled);
-        assert_eq!(result.config.tailwind_config.unwrap(), "./tailwind.config.js");
+        assert_eq!(
+            result.config.tailwind_config.unwrap(),
+            "./tailwind.config.js"
+        );
         assert_eq!(result.config.tailwind_functions.len(), 2);
         assert_eq!(result.config.tailwind_attributes.len(), 2);
         assert!(result.diagnostics.is_empty());
@@ -266,17 +279,14 @@ mod custom_config_tests {
 
     #[test]
     fn test_case_sensitive_function_names() {
-        let extractor = ClassExtractor::new(
-            vec!["MyFunc".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["MyFunc".to_string()], vec!["class".to_string()]);
 
         let content = r#"
             const a = MyFunc("flex p-4");
             const b = myFunc("text-lg");
             const c = MYFUNC("font-bold");
         "#;
-        
+
         let matches = extractor.extract_from_functions(content);
 
         // Should only match exact case
@@ -323,7 +333,7 @@ mod custom_config_tests {
             const a = func123("flex");
             const b = tw2("p-4");
         "#;
-        
+
         let matches = extractor.extract_from_functions(content);
         assert_eq!(matches.len(), 2);
     }
@@ -344,10 +354,7 @@ mod custom_config_tests {
 
     #[test]
     fn test_empty_function_call() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
 
         let content = r#"const x = clsx();"#;
         let matches = extractor.extract_from_functions(content);
@@ -358,10 +365,7 @@ mod custom_config_tests {
 
     #[test]
     fn test_function_with_only_whitespace() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
 
         let content = r#"const x = clsx("   ");"#;
         let matches = extractor.extract_from_functions(content);

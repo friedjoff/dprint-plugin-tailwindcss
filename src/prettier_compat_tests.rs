@@ -9,9 +9,9 @@
 
 #[cfg(test)]
 mod prettier_compat {
-    use crate::sorter::sort_classes;
     use crate::extractor::ClassExtractor;
     use crate::parser::{FileFormat, FormatParser};
+    use crate::sorter::sort_classes;
 
     // ===================================================================
     // BASIC SORTING TESTS
@@ -20,7 +20,10 @@ mod prettier_compat {
     #[test]
     fn test_basic_class_sorting() {
         assert_eq!(sort_classes("sm:p-0 p-0"), "p-0 sm:p-0");
-        assert_eq!(sort_classes("flex items-center justify-between"), "flex items-center justify-between");
+        assert_eq!(
+            sort_classes("flex items-center justify-between"),
+            "flex items-center justify-between"
+        );
     }
 
     #[test]
@@ -38,7 +41,7 @@ mod prettier_compat {
         // Duplicates are preserved after sorting
         assert!(result.contains("p-0"));
         assert!(result.contains("sm:p-0"));
-        
+
         let result2 = sort_classes("flex flex underline flex");
         assert!(result2.contains("flex"));
         assert!(result2.contains("underline"));
@@ -240,14 +243,11 @@ mod prettier_compat {
 
     #[test]
     fn test_html_class_extraction() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
 
         let html = r#"<div class="sm:p-0 p-0"></div>"#;
         let matches = extractor.extract_all(html);
-        
+
         assert_eq!(matches.len(), 1);
         let sorted = sort_classes(&matches[0].content);
         assert_eq!(sorted, "p-0 sm:p-0");
@@ -255,14 +255,12 @@ mod prettier_compat {
 
     #[test]
     fn test_jsx_classname_extraction() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["className".to_string()],
-        );
+        let extractor =
+            ClassExtractor::new(vec!["clsx".to_string()], vec!["className".to_string()]);
 
         let jsx = r#"<div className="sm:p-0 p-0"></div>"#;
         let matches = extractor.extract_all(jsx);
-        
+
         assert_eq!(matches.len(), 1);
         let sorted = sort_classes(&matches[0].content);
         assert_eq!(sorted, "p-0 sm:p-0");
@@ -270,14 +268,12 @@ mod prettier_compat {
 
     #[test]
     fn test_clsx_function_extraction() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["className".to_string()],
-        );
+        let extractor =
+            ClassExtractor::new(vec!["clsx".to_string()], vec!["className".to_string()]);
 
         let code = r#"clsx("sm:p-0 p-0")"#;
         let matches = extractor.extract_all(code);
-        
+
         assert_eq!(matches.len(), 1);
         let sorted = sort_classes(&matches[0].content);
         assert_eq!(sorted, "p-0 sm:p-0");
@@ -285,16 +281,13 @@ mod prettier_compat {
 
     #[test]
     fn test_tw_tagged_template_extraction() {
-        let extractor = ClassExtractor::new(
-            vec!["tw".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["tw".to_string()], vec!["class".to_string()]);
 
         // Note: Template literals (backticks) are not currently supported
         // by the basic regex extraction. This would require more sophisticated parsing.
         let code = r#"tw`sm:p-0 p-0`"#;
         let matches = extractor.extract_all(code);
-        
+
         // Current behavior: template literals are not extracted
         // This is a known limitation that could be addressed in future versions
         assert_eq!(matches.len(), 0);
@@ -309,7 +302,7 @@ mod prettier_compat {
 
         let code = r#"myClasses("sm:p-0 p-0")"#;
         let matches = extractor.extract_all(code);
-        
+
         assert_eq!(matches.len(), 1);
     }
 
@@ -322,7 +315,7 @@ mod prettier_compat {
 
         let html = r#"<div data-class="sm:p-0 p-0" data-classes="sm:flex flex"></div>"#;
         let matches = extractor.extract_all(html);
-        
+
         assert_eq!(matches.len(), 2);
     }
 
@@ -332,38 +325,30 @@ mod prettier_compat {
 
     #[test]
     fn test_html_parser() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
         let parser = FormatParser::new(extractor);
 
         let html = r#"<div class="sm:p-0 p-0">Content</div>"#;
         let matches = parser.parse(html, FileFormat::Html);
-        
+
         assert_eq!(matches.len(), 1);
     }
 
     #[test]
     fn test_jsx_parser() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["className".to_string()],
-        );
+        let extractor =
+            ClassExtractor::new(vec!["clsx".to_string()], vec!["className".to_string()]);
         let parser = FormatParser::new(extractor);
 
         let jsx = r#"<div className="sm:p-0 p-0">Content</div>"#;
         let matches = parser.parse(jsx, FileFormat::Jsx);
-        
+
         assert_eq!(matches.len(), 1);
     }
 
     #[test]
     fn test_vue_template_parser() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
         let parser = FormatParser::new(extractor);
 
         let vue = r#"
@@ -375,16 +360,13 @@ export default {}
 </script>
         "#;
         let matches = parser.parse(vue, FileFormat::Vue);
-        
+
         assert_eq!(matches.len(), 1);
     }
 
     #[test]
     fn test_svelte_parser() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
         let parser = FormatParser::new(extractor);
 
         let svelte = r#"
@@ -394,16 +376,13 @@ let count = 0;
 <div class="sm:p-0 p-0">Count: {count}</div>
         "#;
         let matches = parser.parse(svelte, FileFormat::Svelte);
-        
+
         assert_eq!(matches.len(), 1);
     }
 
     #[test]
     fn test_astro_parser() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
         let parser = FormatParser::new(extractor);
 
         let astro = r#"
@@ -413,7 +392,7 @@ const title = "Hello";
 <div class="sm:p-0 p-0">{title}</div>
         "#;
         let matches = parser.parse(astro, FileFormat::Astro);
-        
+
         assert_eq!(matches.len(), 1);
     }
 }

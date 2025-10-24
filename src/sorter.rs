@@ -22,33 +22,32 @@ impl TailwindClass {
     pub fn parse(class: &str) -> Self {
         let class = class.trim();
         let mut remaining = class;
-        
+
         // Check for important modifier
         let important = remaining.starts_with('!');
         if important {
             remaining = &remaining[1..];
         }
-        
+
         // Split variants and base class
         let parts: Vec<&str> = remaining.split(':').collect();
         let (variants, base_part) = if parts.len() > 1 {
-            let variants = parts[..parts.len() - 1].iter().map(|s| s.to_string()).collect();
+            let variants = parts[..parts.len() - 1]
+                .iter()
+                .map(|s| s.to_string())
+                .collect();
             (variants, parts[parts.len() - 1])
         } else {
             (Vec::new(), parts[0])
         };
-        
+
         // Check for negative modifier
         let negative = base_part.starts_with('-');
-        let base_without_neg = if negative {
-            &base_part[1..]
-        } else {
-            base_part
-        };
-        
+        let base_without_neg = if negative { &base_part[1..] } else { base_part };
+
         // Check for arbitrary value
         let arbitrary = base_without_neg.contains('[');
-        
+
         TailwindClass {
             original: class.to_string(),
             important,
@@ -58,77 +57,79 @@ impl TailwindClass {
             arbitrary,
         }
     }
-    
+
     /// Get the category priority for sorting
     /// Based on TailwindCSS official class order
     fn category_priority(&self) -> u32 {
         // Extract the utility prefix (e.g., "text" from "text-red-500")
         let prefix = self.base.split('-').next().unwrap_or(&self.base);
-        
+
         // TailwindCSS recommended order following Prettier plugin
         match prefix {
             // Layout - Display, Position, Overflow
             "container" | "box" | "block" | "inline" | "hidden" => 100,
             "float" | "clear" | "object" | "overflow" | "overscroll" => 110,
-            
+
             // Flexbox & Grid
             "flex" | "grow" | "shrink" | "basis" | "order" => 200,
-            "grid" | "col" | "row" | "gap" | "auto" | "justify" | "items" | "content" | "place" => 210,
-            
+            "grid" | "col" | "row" | "gap" | "auto" | "justify" | "items" | "content" | "place" => {
+                210
+            }
+
             // Spacing (margin, padding) - comes EARLY in Tailwind order
             "m" | "mx" | "my" | "mt" | "mr" | "mb" | "ml" | "margin" => 300,
             "p" | "px" | "py" | "pt" | "pr" | "pb" | "pl" | "padding" => 310,
             "space" => 320,
-            
+
             // Sizing
             "w" | "width" | "h" | "height" => 400,
             "min" | "max" => 410,
-            
+
             // Position & Z-Index - comes AFTER spacing
             "position" | "static" | "fixed" | "absolute" | "relative" | "sticky" => 500,
             "top" | "right" | "bottom" | "left" | "inset" => 510,
             "z" => 520,
-            
+
             // Typography
             "font" | "text" | "tracking" | "leading" | "list" | "align" => 600,
             "whitespace" | "break" | "truncate" => 610,
-            
+
             // Backgrounds
             "bg" | "from" | "via" | "to" => 700,
-            
+
             // Borders
             "border" | "divide" | "outline" | "ring" => 800,
             "rounded" => 810,
-            
+
             // Effects
             "shadow" | "opacity" | "mix" | "blur" => 900,
-            
+
             // Filters
             "filter" | "backdrop" | "brightness" | "contrast" | "grayscale" => 1000,
-            
+
             // Tables
             "caption" | "table" => 1100,
-            
+
             // Transitions & Animation
             "transition" | "duration" | "ease" | "delay" | "animate" => 1200,
-            
+
             // Transforms
             "transform" | "origin" | "scale" | "rotate" | "translate" | "skew" => 1300,
-            
+
             // Interactivity
             "cursor" | "select" | "resize" | "pointer" | "appearance" => 1400,
-            
+
             // SVG
             "fill" | "stroke" => 1500,
-            
+
             // Accessibility
             "sr" | "screen" => 1600,
-            
+
             // Custom/Unknown - last
             _ => 9999,
         }
     }
-    
+
     /// Get the variant priority for sorting
     fn variant_priority(variant: &str) -> u32 {
         match variant {
@@ -138,10 +139,10 @@ impl TailwindClass {
             "lg" => 120,
             "xl" => 130,
             "2xl" => 140,
-            
+
             // Dark mode
             "dark" => 200,
-            
+
             // State variants
             "hover" => 300,
             "focus" => 310,
@@ -149,22 +150,22 @@ impl TailwindClass {
             "visited" => 330,
             "disabled" => 340,
             "enabled" => 350,
-            
+
             // Group/Peer
             "group" => 400,
             "peer" => 410,
-            
+
             // Position
             "first" => 500,
             "last" => 510,
             "odd" => 520,
             "even" => 530,
-            
+
             // Other
             _ => 9999,
         }
     }
-    
+
     /// Compare variants for sorting
     fn compare_variants(&self, other: &Self) -> Ordering {
         // Compare variant count first
@@ -202,44 +203,44 @@ impl Ord for TailwindClass {
     fn cmp(&self, other: &Self) -> Ordering {
         // 1. Non-important classes first, important classes last
         match self.important.cmp(&other.important) {
-            Ordering::Equal => {},
+            Ordering::Equal => {}
             other => return other,
         }
-        
+
         // 2. Compare by category priority
         let cat1 = self.category_priority();
         let cat2 = other.category_priority();
         match cat1.cmp(&cat2) {
-            Ordering::Equal => {},
+            Ordering::Equal => {}
             other => return other,
         }
-        
+
         // 3. Within same category: classes without variants first
         match self.variants.len().cmp(&other.variants.len()) {
-            Ordering::Equal => {},
+            Ordering::Equal => {}
             other => return other,
         }
-        
+
         // 4. Compare by variants if both have variants
         if !self.variants.is_empty() || !other.variants.is_empty() {
             match self.compare_variants(other) {
-                Ordering::Equal => {},
+                Ordering::Equal => {}
                 other => return other,
             }
         }
-        
+
         // 5. Positive values before negative
         match self.negative.cmp(&other.negative) {
-            Ordering::Equal => {},
+            Ordering::Equal => {}
             other => return other,
         }
-        
+
         // 6. Non-arbitrary before arbitrary values
         match self.arbitrary.cmp(&other.arbitrary) {
-            Ordering::Equal => {},
+            Ordering::Equal => {}
             other => return other,
         }
-        
+
         // 7. Finally, compare base class names alphabetically
         self.base.cmp(&other.base)
     }
@@ -251,16 +252,16 @@ pub fn sort_classes(classes: &str) -> String {
     if trimmed.is_empty() {
         return String::new();
     }
-    
+
     // Parse all classes
     let mut parsed_classes: Vec<TailwindClass> = trimmed
         .split_whitespace()
         .map(TailwindClass::parse)
         .collect();
-    
+
     // Sort the classes
     parsed_classes.sort();
-    
+
     // Reconstruct the string
     parsed_classes
         .iter()
@@ -434,11 +435,12 @@ mod tests {
 
     #[test]
     fn test_real_world_example_1() {
-        let input = "shadow-lg rounded-lg p-6 bg-white text-gray-900 hover:shadow-xl transition-shadow";
+        let input =
+            "shadow-lg rounded-lg p-6 bg-white text-gray-900 hover:shadow-xl transition-shadow";
         let result = sort_classes(input);
         // Should be grouped by category: spacing, typography, backgrounds, borders, effects, transitions
         let classes: Vec<&str> = result.split_whitespace().collect();
-        
+
         // Verify all classes are present
         assert_eq!(classes.len(), 7);
         assert!(result.contains("p-6"));
@@ -455,7 +457,7 @@ mod tests {
         let input = "flex items-center justify-between w-full h-16 px-4 bg-gray-800 text-white";
         let result = sort_classes(input);
         let classes: Vec<&str> = result.split_whitespace().collect();
-        
+
         assert_eq!(classes.len(), 8);
         // Layout should come first
         assert!(result.starts_with("flex"));

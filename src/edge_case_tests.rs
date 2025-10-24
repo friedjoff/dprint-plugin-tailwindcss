@@ -1,14 +1,14 @@
 /// Advanced edge case tests
-/// 
+///
 /// Tests for malformed input, extreme cases, and unusual scenarios
 /// to ensure robust error handling and graceful degradation.
 
 #[cfg(test)]
 mod edge_case_tests {
-    use crate::sorter::{TailwindClass, sort_classes};
-    use crate::extractor::ClassExtractor;
     use crate::config::Configuration;
+    use crate::extractor::ClassExtractor;
     use crate::parser::{FileFormat, FormatParser};
+    use crate::sorter::{sort_classes, TailwindClass};
 
     #[test]
     fn test_empty_string() {
@@ -43,7 +43,7 @@ mod edge_case_tests {
             .map(|i| format!("class-{}", i))
             .collect::<Vec<_>>()
             .join(" ");
-        
+
         let result = sort_classes(&classes);
         // Should handle long strings without panic
         assert!(!result.is_empty());
@@ -66,29 +66,23 @@ mod edge_case_tests {
 
     #[test]
     fn test_unicode_in_content() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
-        
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
+
         let content = r#"<div class="flex p-4">😀 Unicode content 中文</div>"#;
         let matches = extractor.extract_from_attributes(content);
-        
+
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].content, "flex p-4");
     }
 
     #[test]
     fn test_nested_quotes() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
-        
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
+
         // Single quotes inside double quotes
         let content = r#"<div class="flex p-4" data-test='{"class": "ignored"}'>Test</div>"#;
         let matches = extractor.extract_from_attributes(content);
-        
+
         // Should only find the actual class attribute
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].content, "flex p-4");
@@ -132,7 +126,8 @@ mod edge_case_tests {
 
     #[test]
     fn test_extremely_long_variant_chain() {
-        let class_with_variants = "sm:md:lg:xl:2xl:dark:hover:focus:active:disabled:first:last:odd:even:flex";
+        let class_with_variants =
+            "sm:md:lg:xl:2xl:dark:hover:focus:active:disabled:first:last:odd:even:flex";
         let result = sort_classes(class_with_variants);
         // Should handle long variant chains
         assert!(result.contains("flex"));
@@ -183,82 +178,64 @@ mod edge_case_tests {
 
     #[test]
     fn test_empty_file_format() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
         let parser = FormatParser::new(extractor);
-        
+
         let content = "";
         let matches = parser.parse(content, FileFormat::Html);
-        
+
         assert_eq!(matches.len(), 0);
     }
 
     #[test]
     fn test_file_with_only_comments() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
         let parser = FormatParser::new(extractor);
-        
+
         let content = "<!-- This is just a comment -->\n<!-- Another comment -->";
         let matches = parser.parse(content, FileFormat::Html);
-        
+
         assert_eq!(matches.len(), 0);
     }
 
     #[test]
     fn test_malformed_html() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
-        
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
+
         // Unclosed tags
         let content = r#"<div class="flex p-4"><span class="text-lg">"#;
         let matches = extractor.extract_from_attributes(content);
-        
+
         // Should still extract classes from well-formed attributes
         assert_eq!(matches.len(), 2);
     }
 
     #[test]
     fn test_mixed_quote_styles() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
-        
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
+
         let content = r#"<div class="flex p-4"><span class='text-lg font-bold'>Test</span></div>"#;
         let matches = extractor.extract_from_attributes(content);
-        
+
         assert_eq!(matches.len(), 2);
     }
 
     #[test]
     fn test_class_in_attribute_value() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
-        
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
+
         // "class" appears in data attribute value, should not be extracted
         let content = r#"<div class="flex" data-info="class should be ignored">Test</div>"#;
         let matches = extractor.extract_from_attributes(content);
-        
+
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].content, "flex");
     }
 
     #[test]
     fn test_extremely_nested_structure() {
-        let extractor = ClassExtractor::new(
-            vec!["clsx".to_string()],
-            vec!["class".to_string()],
-        );
-        
+        let extractor = ClassExtractor::new(vec!["clsx".to_string()], vec!["class".to_string()]);
+
         let content = r#"
             <div class="a">
                 <div class="b">
@@ -274,7 +251,7 @@ mod edge_case_tests {
                 </div>
             </div>
         "#;
-        
+
         let matches = extractor.extract_from_attributes(content);
         assert_eq!(matches.len(), 6);
     }
@@ -287,7 +264,7 @@ mod edge_case_tests {
             tailwind_functions: vec![],
             tailwind_attributes: vec![],
         };
-        
+
         // Should not panic with empty configuration
         assert!(config.tailwind_functions.is_empty());
         assert!(config.tailwind_attributes.is_empty());
@@ -298,9 +275,9 @@ mod edge_case_tests {
         let classes = "hover:bg-blue-500 focus:bg-green-500 active:bg-red-500 \
                       disabled:opacity-50 first:mt-0 last:mb-0 odd:bg-gray-100 \
                       even:bg-gray-200 visited:text-purple-500";
-        
+
         let result = sort_classes(classes);
-        
+
         // Should handle all common variants
         assert!(result.contains("hover:"));
         assert!(result.contains("focus:"));
@@ -311,7 +288,7 @@ mod edge_case_tests {
     fn test_responsive_with_variants() {
         let classes = "sm:hover:bg-blue-500 md:focus:text-white lg:active:p-4";
         let result = sort_classes(classes);
-        
+
         // Should handle responsive breakpoints with pseudo-class variants
         assert!(result.contains("sm:hover:"));
         assert!(result.contains("md:focus:"));
@@ -322,7 +299,7 @@ mod edge_case_tests {
     fn test_dark_mode_variants() {
         let classes = "dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800";
         let result = sort_classes(classes);
-        
+
         // Should handle dark mode variants
         assert!(result.contains("dark:"));
     }
@@ -331,7 +308,7 @@ mod edge_case_tests {
     fn test_container_queries() {
         let classes = "@container/main:flex @container/sidebar:hidden";
         let result = sort_classes(classes);
-        
+
         // Should handle container query variants (new in Tailwind v3.2+)
         assert!(result.contains("@container"));
     }
@@ -340,7 +317,7 @@ mod edge_case_tests {
     fn test_arbitrary_variants() {
         let classes = "[&:nth-child(3)]:flex [&>*]:p-4";
         let result = sort_classes(classes);
-        
+
         // Should handle arbitrary variants
         assert!(result.contains("[&:nth-child(3)]:"));
         assert!(result.contains("[&>*]:"));

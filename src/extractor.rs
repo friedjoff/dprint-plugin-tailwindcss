@@ -1,5 +1,5 @@
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 
 /// Patterns for detecting TailwindCSS classes in different contexts
 pub struct ClassExtractor {
@@ -20,7 +20,7 @@ impl ClassExtractor {
     /// Extract all class strings from HTML/JSX attributes
     pub fn extract_from_attributes(&self, content: &str) -> Vec<ClassMatch> {
         let mut matches = Vec::new();
-        
+
         for attr_name in &self.attribute_names {
             // Match class="..." or className="..." or class='...'
             let pattern = format!(r#"{}=["']([^"']*)["']"#, regex::escape(attr_name));
@@ -38,27 +38,28 @@ impl ClassExtractor {
                     }
                 }
             }
-            
+
             // Match class={...} or className={...} (JSX)
             let jsx_pattern = format!(r#"{}\s*=\s*\{{([^}}]+)\}}"#, regex::escape(attr_name));
             if let Ok(re) = Regex::new(&jsx_pattern) {
                 for cap in re.captures_iter(content) {
                     if let Some(expr) = cap.get(1) {
                         // Extract string literals from JSX expressions
-                        let jsx_matches = self.extract_from_jsx_expression(expr.as_str(), expr.start());
+                        let jsx_matches =
+                            self.extract_from_jsx_expression(expr.as_str(), expr.start());
                         matches.extend(jsx_matches);
                     }
                 }
             }
         }
-        
+
         matches
     }
 
     /// Extract class strings from utility function calls
     pub fn extract_from_functions(&self, content: &str) -> Vec<ClassMatch> {
         let mut matches = Vec::new();
-        
+
         for func_name in &self.function_names {
             // Match function calls: clsx("...", "...")
             let pattern = format!(r#"{}\s*\(([^)]+)\)"#, regex::escape(func_name));
@@ -66,13 +67,14 @@ impl ClassExtractor {
                 for cap in re.captures_iter(content) {
                     if let Some(args) = cap.get(1) {
                         // Extract string literals from function arguments
-                        let func_matches = self.extract_strings_from_args(args.as_str(), args.start());
+                        let func_matches =
+                            self.extract_strings_from_args(args.as_str(), args.start());
                         matches.extend(func_matches);
                     }
                 }
             }
         }
-        
+
         matches
     }
 
@@ -83,12 +85,11 @@ impl ClassExtractor {
 
     /// Extract string literals from function arguments or JSX expressions
     fn extract_strings_from_args(&self, args: &str, base_offset: usize) -> Vec<ClassMatch> {
-        static STRING_REGEX: Lazy<Regex> = Lazy::new(|| {
-            Regex::new(r#"["'`]([^"'`]*)["'`]"#).unwrap()
-        });
-        
+        static STRING_REGEX: Lazy<Regex> =
+            Lazy::new(|| Regex::new(r#"["'`]([^"'`]*)["'`]"#).unwrap());
+
         let mut matches = Vec::new();
-        
+
         for cap in STRING_REGEX.captures_iter(args) {
             if let Some(string_content) = cap.get(1) {
                 let content = string_content.as_str();
@@ -102,20 +103,21 @@ impl ClassExtractor {
                 }
             }
         }
-        
+
         matches
     }
 
     /// Extract all class strings from content
+    #[allow(dead_code)]
     pub fn extract_all(&self, content: &str) -> Vec<ClassMatch> {
         let mut matches = Vec::new();
         matches.extend(self.extract_from_attributes(content));
         matches.extend(self.extract_from_functions(content));
-        
+
         // Sort by position and remove duplicates
         matches.sort_by_key(|m| m.start);
         matches.dedup_by(|a, b| a.start == b.start && a.end == b.end);
-        
+
         matches
     }
 }
@@ -137,7 +139,11 @@ mod tests {
 
     fn create_extractor() -> ClassExtractor {
         ClassExtractor::new(
-            vec!["clsx".to_string(), "classnames".to_string(), "cn".to_string()],
+            vec![
+                "clsx".to_string(),
+                "classnames".to_string(),
+                "cn".to_string(),
+            ],
             vec!["class".to_string(), "className".to_string()],
         )
     }
@@ -147,7 +153,7 @@ mod tests {
         let extractor = create_extractor();
         let html = r#"<div class="text-red-500 bg-blue-500">Test</div>"#;
         let matches = extractor.extract_from_attributes(html);
-        
+
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].content, "text-red-500 bg-blue-500");
     }
@@ -157,7 +163,7 @@ mod tests {
         let extractor = create_extractor();
         let html = r#"<div class='text-red-500 bg-blue-500'>Test</div>"#;
         let matches = extractor.extract_from_attributes(html);
-        
+
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].content, "text-red-500 bg-blue-500");
     }
@@ -167,7 +173,7 @@ mod tests {
         let extractor = create_extractor();
         let jsx = r#"<div className="text-red-500 bg-blue-500">Test</div>"#;
         let matches = extractor.extract_from_attributes(jsx);
-        
+
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].content, "text-red-500 bg-blue-500");
     }
@@ -177,7 +183,7 @@ mod tests {
         let extractor = create_extractor();
         let code = r#"const classes = clsx("text-red-500", "bg-blue-500");"#;
         let matches = extractor.extract_from_functions(code);
-        
+
         assert_eq!(matches.len(), 2);
         assert_eq!(matches[0].content, "text-red-500");
         assert_eq!(matches[1].content, "bg-blue-500");
@@ -188,7 +194,7 @@ mod tests {
         let extractor = create_extractor();
         let code = r#"const classes = classnames("text-red-500", "bg-blue-500");"#;
         let matches = extractor.extract_from_functions(code);
-        
+
         assert_eq!(matches.len(), 2);
     }
 
@@ -200,7 +206,7 @@ mod tests {
             <div class="bg-blue-500">Second</div>
         "#;
         let matches = extractor.extract_from_attributes(html);
-        
+
         assert_eq!(matches.len(), 2);
         assert_eq!(matches[0].content, "text-red-500");
         assert_eq!(matches[1].content, "bg-blue-500");
@@ -216,7 +222,7 @@ mod tests {
             const classes = clsx("p-4", "m-2");
         "#;
         let matches = extractor.extract_all(code);
-        
+
         assert_eq!(matches.len(), 4);
     }
 
@@ -225,7 +231,7 @@ mod tests {
         let extractor = create_extractor();
         let jsx = r#"<div className={"text-red-500 bg-blue-500"}>Test</div>"#;
         let matches = extractor.extract_from_attributes(jsx);
-        
+
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].content, "text-red-500 bg-blue-500");
     }
@@ -235,7 +241,7 @@ mod tests {
         let extractor = create_extractor();
         let html = r#"<div class="">Test</div>"#;
         let matches = extractor.extract_from_attributes(html);
-        
+
         assert_eq!(matches.len(), 0); // Empty strings are filtered
     }
 
@@ -244,7 +250,7 @@ mod tests {
         let extractor = create_extractor();
         let html = r#"<div class="text-red-500">Test</div>"#;
         let matches = extractor.extract_from_attributes(html);
-        
+
         assert_eq!(matches.len(), 1);
         assert!(matches[0].start < matches[0].end);
         assert_eq!(&html[matches[0].start..matches[0].end], "text-red-500");
@@ -263,7 +269,7 @@ mod tests {
             }
         "#;
         let matches = extractor.extract_all(jsx);
-        
+
         assert_eq!(matches.len(), 1);
         assert!(matches[0].content.contains("px-4"));
         assert!(matches[0].content.contains("hover:bg-blue-600"));
@@ -282,7 +288,7 @@ mod tests {
             </template>
         "#;
         let matches = extractor.extract_all(vue);
-        
+
         assert_eq!(matches.len(), 3);
     }
 
@@ -295,7 +301,7 @@ mod tests {
             const someUrl = "https://example.com/class?param=value";
         "#;
         let matches = extractor.extract_all(code);
-        
+
         assert_eq!(matches.len(), 0);
     }
 
@@ -305,10 +311,10 @@ mod tests {
             vec!["cn".to_string(), "makeClass".to_string()],
             vec!["class".to_string()],
         );
-        
+
         let code = r#"const classes = cn("text-red-500"); const other = makeClass("bg-blue-500");"#;
         let matches = extractor.extract_from_functions(code);
-        
+
         assert_eq!(matches.len(), 2);
         assert_eq!(matches[0].content, "text-red-500");
         assert_eq!(matches[1].content, "bg-blue-500");

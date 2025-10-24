@@ -4,11 +4,11 @@ use dprint_core::plugins::FormatConfigId;
 
 fn format_text(file_text: &str, file_extension: &str) -> Option<String> {
     let mut handler = TailwindCssPluginHandler::new();
-    
+
     let config_map = ConfigKeyMap::new();
     let global_config = GlobalConfiguration::default();
     let config_result = handler.resolve_config(config_map, &global_config);
-    
+
     let file_name = format!("test.{}", file_extension);
     let file_path = std::path::Path::new(&file_name);
     let file_bytes = file_text.as_bytes().to_vec();
@@ -20,7 +20,7 @@ fn format_text(file_text: &str, file_extension: &str) -> Option<String> {
         config_id: FormatConfigId::from_raw(0),
         token: &dprint_core::plugins::NullCancellationToken,
     };
-    
+
     match handler.format(request, |_| Ok(None)) {
         Ok(Some(result)) => Some(String::from_utf8(result).unwrap()),
         Ok(None) => None,
@@ -40,7 +40,7 @@ fn test_format_html_file() {
 
     let result = format_text(input, "html");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     assert!(formatted.contains(r#"class="mt-2 p-4 z-10 bg-white""#));
     // Verify rest of HTML is unchanged
@@ -51,10 +51,10 @@ fn test_format_html_file() {
 #[test]
 fn test_format_htm_file() {
     let input = r#"<div class="hover:bg-blue-500 bg-red-500">Test</div>"#;
-    
+
     let result = format_text(input, "htm");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     assert!(formatted.contains(r#"class="bg-red-500 hover:bg-blue-500""#));
 }
@@ -71,7 +71,7 @@ fn test_format_jsx_file() {
 
     let result = format_text(input, "jsx");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     assert!(formatted.contains(r#"className="p-4 z-10 text-white bg-blue-500 rounded-lg""#));
     assert!(formatted.contains("export function Button()"));
@@ -96,7 +96,7 @@ export const Card: React.FC<Props> = ({ variant }) => {
 
     let result = format_text(input, "tsx");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     assert!(formatted.contains(r#"className="p-6 bg-white rounded-lg shadow-lg""#));
     assert!(formatted.contains("import React"));
@@ -119,7 +119,7 @@ export default {
 
     let result = format_text(input, "vue");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     // Check that classes are present (order may vary slightly)
     assert!(formatted.contains("flex"));
@@ -146,7 +146,7 @@ fn test_format_svelte_file() {
 
     let result = format_text(input, "svelte");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     // Check that classes are present and sorted
     assert!(formatted.contains("flex"));
@@ -196,7 +196,7 @@ const classes = clsx("z-10 hover:shadow-lg p-4 bg-white");
 
     let result = format_text(input, "jsx");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     assert!(formatted.contains(r#"clsx("p-4 z-10 bg-white hover:shadow-lg")"#));
 }
@@ -212,7 +212,7 @@ fn test_format_preserves_comments() {
 
     let result = format_text(input, "html");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     assert!(formatted.contains("<!-- This is a comment -->"));
     assert!(formatted.contains("<!-- Another comment -->"));
@@ -230,7 +230,7 @@ fn test_format_preserves_whitespace() {
 
     let result = format_text(input, "html");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     // Whitespace between tags should be preserved
     assert!(formatted.contains(">\n\n    <span"));
@@ -247,7 +247,7 @@ fn test_format_multiple_classes_in_file() {
 
     let result = format_text(input, "html");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     assert!(formatted.contains(r#"class="p-4 z-10""#));
     assert!(formatted.contains(r#"class="bg-red-500 hover:bg-blue-500""#));
@@ -257,7 +257,7 @@ fn test_format_multiple_classes_in_file() {
 #[test]
 fn test_format_empty_class() {
     let input = r#"<div class="">Empty</div>"#;
-    
+
     let result = format_text(input, "html");
     // Empty classes should not trigger formatting
     assert!(result.is_none());
@@ -266,7 +266,7 @@ fn test_format_empty_class() {
 #[test]
 fn test_format_already_sorted() {
     let input = r#"<div class="mt-2 p-4 z-10 bg-white">Already sorted</div>"#;
-    
+
     let result = format_text(input, "html");
     // Already sorted, so no changes
     assert!(result.is_none());
@@ -275,15 +275,15 @@ fn test_format_already_sorted() {
 #[test]
 fn test_format_disabled() {
     use dprint_core::configuration::ConfigKeyValue;
-    
+
     let mut handler = TailwindCssPluginHandler::new();
-    
+
     let mut config_map = ConfigKeyMap::new();
     config_map.insert("enabled".to_string(), ConfigKeyValue::Bool(false));
-    
+
     let global_config = GlobalConfiguration::default();
     let config_result = handler.resolve_config(config_map, &global_config);
-    
+
     let input = r#"<div class="z-10 p-4 mt-2">Test</div>"#;
     let file_bytes = input.as_bytes().to_vec();
     let request = SyncFormatRequest {
@@ -294,7 +294,7 @@ fn test_format_disabled() {
         config_id: FormatConfigId::from_raw(0),
         token: &dprint_core::plugins::NullCancellationToken,
     };
-    
+
     let result = handler.format(request, |_| Ok(None));
     assert!(result.is_ok());
     assert!(result.unwrap().is_none());
@@ -303,14 +303,14 @@ fn test_format_disabled() {
 #[test]
 fn test_format_malformed_utf8() {
     let mut handler = TailwindCssPluginHandler::new();
-    
+
     let config_map = ConfigKeyMap::new();
     let global_config = GlobalConfiguration::default();
     let config_result = handler.resolve_config(config_map, &global_config);
-    
+
     // Invalid UTF-8 bytes
     let invalid_bytes: Vec<u8> = vec![0xFF, 0xFE, 0xFD];
-    
+
     let request = SyncFormatRequest {
         file_path: std::path::Path::new("test.html"),
         file_bytes: invalid_bytes,
@@ -319,7 +319,7 @@ fn test_format_malformed_utf8() {
         config_id: FormatConfigId::from_raw(0),
         token: &dprint_core::plugins::NullCancellationToken,
     };
-    
+
     let result = handler.format(request, |_| Ok(None));
     assert!(result.is_err());
 }
@@ -327,10 +327,10 @@ fn test_format_malformed_utf8() {
 #[test]
 fn test_format_mixed_quotes() {
     let input = r#"<div class="z-10 p-4" data-class='hover:bg-blue-500 bg-red-500'>Test</div>"#;
-    
+
     let result = format_text(input, "html");
     assert!(result.is_some());
-    
+
     let formatted = result.unwrap();
     // class attribute should be sorted
     assert!(formatted.contains("class="));
@@ -344,7 +344,7 @@ fn test_format_with_line_breaks_in_class() {
     let input = r#"<div class="z-10
     p-4
     mt-2">Test</div>"#;
-    
+
     let result = format_text(input, "html");
     // Should handle multi-line classes
     if let Some(formatted) = result {
