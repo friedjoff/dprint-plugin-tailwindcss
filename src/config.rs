@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 /// Configuration for the TailwindCSS plugin
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct Configuration {
     /// Enable or disable the plugin
     pub enabled: bool,
@@ -40,6 +41,7 @@ impl Default for Configuration {
 }
 
 /// Resolve the configuration from the provided config map
+#[allow(dead_code)]
 pub fn resolve_config(
     mut config: ConfigKeyMap,
     _global_config: &GlobalConfiguration,
@@ -90,6 +92,7 @@ pub fn resolve_config(
     }
 }
 
+#[allow(dead_code)]
 fn get_nullable_vec(
     config: &mut ConfigKeyMap,
     key: &str,

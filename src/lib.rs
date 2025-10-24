@@ -18,9 +18,11 @@ use integration::PluginCompatibility;
 use parser::{FileFormat, FormatParser};
 use sorter::sort_classes;
 
+#[allow(dead_code)]
 struct TailwindCssPluginHandler;
 
 impl TailwindCssPluginHandler {
+    #[allow(dead_code)]
     const fn new() -> Self {
         TailwindCssPluginHandler
     }

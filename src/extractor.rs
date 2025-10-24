@@ -10,6 +10,7 @@ pub struct ClassExtractor {
 }
 
 impl ClassExtractor {
+    #[allow(dead_code)]
     pub fn new(function_names: Vec<String>, attribute_names: Vec<String>) -> Self {
         Self {
             function_names,

@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 
 /// Represents a parsed TailwindCSS class with its components
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(dead_code)]
 pub struct TailwindClass {
     /// Original class string
     pub original: String,
@@ -19,6 +20,7 @@ pub struct TailwindClass {
 
 impl TailwindClass {
     /// Parse a TailwindCSS class string into its components
+    #[allow(dead_code)]
     pub fn parse(class: &str) -> Self {
         let class = class.trim();
         let mut remaining = class;
@@ -60,6 +62,7 @@ impl TailwindClass {
 
     /// Get the category priority for sorting
     /// Based on TailwindCSS official class order
+    #[allow(dead_code)]
     fn category_priority(&self) -> u32 {
         // Extract the utility prefix (e.g., "text" from "text-red-500")
         let prefix = self.base.split('-').next().unwrap_or(&self.base);
@@ -131,6 +134,7 @@ impl TailwindClass {
     }
 
     /// Get the variant priority for sorting
+    #[allow(dead_code)]
     fn variant_priority(variant: &str) -> u32 {
         match variant {
             // Responsive breakpoints
@@ -167,6 +171,7 @@ impl TailwindClass {
     }
 
     /// Compare variants for sorting
+    #[allow(dead_code)]
     fn compare_variants(&self, other: &Self) -> Ordering {
         // Compare variant count first
         match self.variants.len().cmp(&other.variants.len()) {
@@ -247,6 +252,7 @@ impl Ord for TailwindClass {
 }
 
 /// Sort a space-separated list of TailwindCSS classes
+#[allow(dead_code)]
 pub fn sort_classes(classes: &str) -> String {
     let trimmed = classes.trim();
     if trimmed.is_empty() {

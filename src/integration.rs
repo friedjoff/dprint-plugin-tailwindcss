@@ -4,17 +4,18 @@
 /// compatibility with other plugins in the formatting pipeline.
 use dprint_core::plugins::{FormatResult, SyncHostFormatRequest};
 
-/// Plugin compatibility checker
+/// Plugin compatibility checks and coordination
 ///
-/// Ensures this plugin can coexist with other dprint plugins
-/// without conflicts or double-formatting.
+/// Ensures this plugin works well with other dprint plugins.
+#[allow(dead_code)]
 pub struct PluginCompatibility;
 
 impl PluginCompatibility {
-    /// Check if a file should be formatted by this plugin
+    /// Check if this plugin should format a given file
     ///
     /// Some files might be handled by other plugins first,
     /// and we should respect their formatting decisions.
+    #[allow(dead_code)]
     pub fn should_format(file_path: &str) -> bool {
         // Check file extension
         let extension = file_path.split('.').next_back().unwrap_or("");
@@ -45,6 +46,7 @@ impl PluginCompatibility {
     /// Check if the plugin should defer to another plugin
     ///
     /// Some files are better handled by specialized plugins.
+    #[allow(dead_code)]
     pub fn should_defer(file_path: &str) -> bool {
         let extension = file_path.split('.').next_back().unwrap_or("");
 

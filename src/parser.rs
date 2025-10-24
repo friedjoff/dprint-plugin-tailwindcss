@@ -6,6 +6,7 @@ use crate::extractor::{ClassExtractor, ClassMatch};
 
 /// File format types supported by the plugin
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum FileFormat {
     Html,
     Jsx,
@@ -17,6 +18,7 @@ pub enum FileFormat {
 
 impl FileFormat {
     /// Determine file format from file path
+    #[allow(dead_code)]
     pub fn from_path(path: &str) -> Option<Self> {
         let extension = path.split('.').next_back()?.to_lowercase();
         match extension.as_str() {
@@ -31,17 +33,20 @@ impl FileFormat {
     }
 }
 
-/// Format-aware parser that extracts classes based on file type
+/// Format parser that extracts classes based on file format
+#[allow(dead_code)]
 pub struct FormatParser {
     extractor: ClassExtractor,
 }
 
 impl FormatParser {
+    #[allow(dead_code)]
     pub fn new(extractor: ClassExtractor) -> Self {
         Self { extractor }
     }
 
     /// Parse content based on file format
+    #[allow(dead_code)]
     pub fn parse(&self, content: &str, format: FileFormat) -> Vec<ClassMatch> {
         match format {
             FileFormat::Html => self.parse_html(content),
@@ -56,6 +61,7 @@ impl FormatParser {
     ///
     /// HTML files contain standard class attributes in tags.
     /// We preserve all HTML structure, comments, and whitespace.
+    #[allow(dead_code)]
     fn parse_html(&self, content: &str) -> Vec<ClassMatch> {
         // Use extractor to find class attributes
         let mut matches = self.extractor.extract_from_attributes(content);
@@ -74,6 +80,7 @@ impl FormatParser {
     /// - String literals: className="..."
     /// - Template literals: className={`...`}
     /// - Utility functions: className={clsx(...)}
+    #[allow(dead_code)]
     fn parse_jsx(&self, content: &str) -> Vec<ClassMatch> {
         // Extract from className and class attributes
         let mut matches = self.extractor.extract_from_attributes(content);
@@ -93,6 +100,7 @@ impl FormatParser {
     /// - <style>: Contains CSS (we ignore this)
     ///
     /// We only parse classes in the template section.
+    #[allow(dead_code)]
     fn parse_vue(&self, content: &str) -> Vec<ClassMatch> {
         // Find the template section
         if let Some(template_section) = extract_vue_template(content) {
@@ -136,6 +144,7 @@ impl FormatParser {
     /// - <style> sections for CSS
     ///
     /// Svelte also supports reactive expressions like {#if}, {#each}, etc.
+    #[allow(dead_code)]
     fn parse_svelte(&self, content: &str) -> Vec<ClassMatch> {
         // Svelte markup is at the top level, but we need to avoid
         // parsing inside <script> and <style> tags
@@ -166,6 +175,7 @@ impl FormatParser {
     /// - HTML-like markup (JSX-like syntax)
     ///
     /// We parse classes in the markup section only.
+    #[allow(dead_code)]
     fn parse_astro(&self, content: &str) -> Vec<ClassMatch> {
         // Find the frontmatter section (---...---)
         let markup_start = find_astro_frontmatter_end(content).unwrap_or_default();
@@ -194,12 +204,14 @@ impl FormatParser {
 
 /// Section of content with its position
 #[derive(Debug)]
+#[allow(dead_code)]
 struct ContentSection {
     start: usize,
     content: String,
 }
 
 /// Extract the template section from a Vue file
+#[allow(dead_code)]
 fn extract_vue_template(content: &str) -> Option<ContentSection> {
     // Find <template> opening tag
     let template_start_tag = content.find("<template")?;
@@ -215,6 +227,7 @@ fn extract_vue_template(content: &str) -> Option<ContentSection> {
 }
 
 /// Extract markup sections from Svelte file (excluding <script> and <style>)
+#[allow(dead_code)]
 fn extract_svelte_markup_sections(content: &str) -> Vec<ContentSection> {
     let mut sections = Vec::new();
     let mut current_pos = 0;
@@ -282,6 +295,7 @@ fn extract_svelte_markup_sections(content: &str) -> Vec<ContentSection> {
 }
 
 /// Find the end position of Astro frontmatter section
+#[allow(dead_code)]
 fn find_astro_frontmatter_end(content: &str) -> Option<usize> {
     // Check if file starts with ---
     if !content.trim_start().starts_with("---") {
