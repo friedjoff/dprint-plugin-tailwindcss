@@ -62,13 +62,13 @@ Following [dprint Wasm plugin development docs](https://github.com/dprint/dprint
 
 ### 5. File Format Support
 
-- [ ] HTML/HTM files
-- [ ] JSX/TSX (React) files
-- [ ] Vue single-file components
-- [ ] Svelte components
-- [ ] Astro components
-- [ ] Use existing dprint language plugins as parsers where possible
-- [ ] **Verify:** Format sample files of each type and confirm classes are sorted without breaking syntax or losing content
+- [x] HTML/HTM files
+- [x] JSX/TSX (React) files
+- [x] Vue single-file components
+- [x] Svelte components
+- [x] Astro components
+- [x] Use existing dprint language plugins as parsers where possible
+- [x] **Verify:** Format sample files of each type and confirm classes are sorted without breaking syntax or losing content
 
 ### 6. Parsing Strategy
 

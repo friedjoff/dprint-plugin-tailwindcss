@@ -187,3 +187,6 @@ mod tests {
         assert!(result.unwrap().is_empty());
     }
 }
+
+#[cfg(test)]
+mod integration_tests;
