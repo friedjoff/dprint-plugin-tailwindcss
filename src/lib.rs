@@ -2,6 +2,7 @@ mod config;
 mod sorter;
 mod extractor;
 mod parser;
+mod integration;
 
 use dprint_core::configuration::{ConfigKeyMap, GlobalConfiguration};
 #[cfg(target_arch = "wasm32")]
@@ -13,6 +14,7 @@ use dprint_core::plugins::{
 
 use config::Configuration;
 use extractor::ClassExtractor;
+use integration::PluginCompatibility;
 use parser::{FileFormat, FormatParser};
 use sorter::sort_classes;
 
@@ -62,12 +64,22 @@ impl SyncPluginHandler<Configuration> for TailwindCssPluginHandler {
             return Ok(None);
         }
 
+        // Check plugin compatibility - should we format this file?
+        let file_path = request.file_path.to_string_lossy();
+        if !PluginCompatibility::should_format(&file_path) {
+            return Ok(None);
+        }
+
+        // If we should defer to another plugin, return None
+        if PluginCompatibility::should_defer(&file_path) {
+            return Ok(None);
+        }
+
         // Convert file bytes to string
         let file_text = String::from_utf8(request.file_bytes.to_vec())
             .map_err(|e| anyhow::anyhow!("Failed to parse file as UTF-8: {}", e))?;
 
         // Determine file format from path
-        let file_path = request.file_path.to_string_lossy();
         let format = FileFormat::from_path(&file_path);
 
         // Create extractor with configured function and attribute names
@@ -208,3 +220,6 @@ mod integration_tests;
 
 #[cfg(test)]
 mod format_aware_tests;
+
+#[cfg(test)]
+mod plugin_ecosystem_tests;

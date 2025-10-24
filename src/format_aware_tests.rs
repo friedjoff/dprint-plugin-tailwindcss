@@ -8,7 +8,6 @@ mod format_aware_tests {
     use crate::config::Configuration;
     use crate::parser::{FileFormat, FormatParser};
     use crate::extractor::ClassExtractor;
-    use crate::sorter::sort_classes;
 
     fn create_test_config() -> Configuration {
         Configuration {
@@ -224,7 +223,7 @@ export function Button({ active }) {
             
             // Verify it's not inside a comment
             let before = &content[..m.start];
-            let after = &content[m.end..];
+            let _after = &content[m.end..];
             
             let comment_opens_before = before.matches("<!--").count();
             let comment_closes_before = before.matches("-->").count();
