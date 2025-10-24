@@ -25,7 +25,7 @@ This plugin is a WebAssembly-based dprint formatter that automatically sorts Tai
 
 ### Project Status
 
-✅ **Completed** (Steps 1-8):
+✅ **All 10 Steps Complete**:
 - Project setup and build configuration
 - Core plugin interface implementation
 - Configuration system
@@ -33,11 +33,11 @@ This plugin is a WebAssembly-based dprint formatter that automatically sorts Tai
 - Multi-format file support
 - Format-aware parsing strategy
 - Plugin ecosystem integration
-- Comprehensive test suite
+- Comprehensive test suite (240 tests)
+- Build and distribution system
+- Complete documentation (14 docs)
 
-⏳ **In Progress** (Steps 9-10):
-- WASM build and distribution
-- Complete user documentation
+**Status**: 🎉 100% Complete - Ready for v0.1.0 Release
 
 ## Getting Started
 
@@ -331,7 +331,22 @@ Current coverage: **100%** for all implemented features
 
 ## Building and Distribution
 
-### Building for WASM
+### Using Build Scripts
+
+We provide automated build scripts for convenience:
+
+```bash
+# Development build (debug mode)
+./scripts/build.sh
+
+# Production build (optimized)
+./scripts/build.sh --release
+
+# Create a new release
+./scripts/release.sh 0.1.0
+```
+
+### Manual Building for WASM
 
 ```bash
 # Debug build
@@ -343,45 +358,42 @@ cargo build --release --target wasm32-unknown-unknown
 
 Output location: `target/wasm32-unknown-unknown/release/dprint_plugin_tailwindcss.wasm`
 
-### Optimizing WASM Binary
+### GitHub Actions CI/CD
 
-```bash
-# Install wasm-opt (part of binaryen)
-# Ubuntu/Debian:
-apt-get install binaryen
+The project includes automated workflows:
 
-# macOS:
-brew install binaryen
+- **CI Workflow** (`.github/workflows/ci.yml`):
+  - Runs on every push/PR
+  - Executes all 240 tests
+  - Checks code formatting
+  - Runs clippy lints
+  - Builds WASM artifact
 
-# Optimize the WASM file
-wasm-opt -Oz -o optimized.wasm target/wasm32-unknown-unknown/release/dprint_plugin_tailwindcss.wasm
-```
+- **Release Workflow** (`.github/workflows/release.yml`):
+  - Triggers on version tags (v*.*.*)
+  - Creates GitHub release
+  - Builds optimized WASM
+  - Uploads release artifacts
 
 ### Creating a Release
 
 1. **Update version** in `Cargo.toml`
-2. **Build release**:
+2. **Update CHANGELOG.md**
+3. **Run release script**:
    ```bash
-   cargo build --release --target wasm32-unknown-unknown
+   ./scripts/release.sh 0.1.0
    ```
-3. **Optimize WASM** (see above)
-4. **Test the WASM file**:
+4. **Push to GitHub**:
    ```bash
-   dprint config add file://$(pwd)/optimized.wasm
+   git push origin main
+   git push origin v0.1.0
    ```
-5. **Create GitHub release** with WASM artifact
-6. **Update plugin registry** (dprint.dev)
+5. GitHub Actions will automatically:
+   - Create the GitHub release
+   - Build and upload WASM
+   - Generate plugin-info.json
 
-### Distribution Checklist
-
-- [ ] Version bumped in `Cargo.toml`
-- [ ] CHANGELOG.md updated
-- [ ] All tests passing
-- [ ] WASM compiled and optimized
-- [ ] Plugin tested locally with dprint
-- [ ] GitHub release created
-- [ ] Plugin registry updated
-- [ ] Documentation updated
+See [RELEASE_PROCESS.md](RELEASE_PROCESS.md) for detailed instructions.
 
 ## Contributing
 
@@ -427,6 +439,9 @@ docs/
 ├── TESTING.md                   (Testing guide & coverage)
 ├── PERFORMANCE.md               (Performance optimization tips)
 ├── PLUGIN_COMPATIBILITY.md      (Plugin ecosystem integration)
+├── API_REFERENCE.md             (Complete API documentation)
+├── MIGRATION_GUIDE.md           (Migration from prettier-plugin)
+├── RELEASE_PROCESS.md           (Release procedures)
 ├── CONTRIBUTING.md              (Contribution guide)
 └── PROJECT_STATUS.md            (Current status & roadmap)
 ```
@@ -481,5 +496,6 @@ dprint-plugin-tailwindcss/
 
 ---
 
-**Last Updated**: Step 8 completion (240 tests passing)  
-**Status**: Ready for Steps 9-10 (Build & Distribution)
+**Last Updated**: Step 10 completion (All documentation complete)  
+**Status**: 🎉 100% Complete - Ready for v0.1.0 Release  
+**Test Status**: ✅ 240/240 passing
