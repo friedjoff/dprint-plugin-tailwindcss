@@ -1,4 +1,6 @@
 mod config;
+mod sorter;
+mod extractor;
 
 use dprint_core::configuration::{ConfigKeyMap, GlobalConfiguration};
 #[cfg(target_arch = "wasm32")]
@@ -9,6 +11,8 @@ use dprint_core::plugins::{
 };
 
 use config::Configuration;
+use extractor::ClassExtractor;
+use sorter::sort_classes;
 
 struct TailwindCssPluginHandler;
 
@@ -56,9 +60,49 @@ impl SyncPluginHandler<Configuration> for TailwindCssPluginHandler {
             return Ok(None);
         }
 
-        // TODO: Implement actual formatting logic
-        // For now, return None (no changes)
-        Ok(None)
+        // Convert file bytes to string
+        let file_text = String::from_utf8(request.file_bytes.to_vec())
+            .map_err(|e| anyhow::anyhow!("Failed to parse file as UTF-8: {}", e))?;
+
+        // Create extractor with configured function and attribute names
+        let extractor = ClassExtractor::new(
+            request.config.tailwind_functions.clone(),
+            request.config.tailwind_attributes.clone(),
+        );
+
+        // Extract all class strings from the file
+        let matches = extractor.extract_all(&file_text);
+
+        // If no matches found, return unchanged
+        if matches.is_empty() {
+            return Ok(None);
+        }
+
+        // Sort and replace each class string
+        let mut result = file_text.clone();
+        let mut offset: i32 = 0;
+
+        for class_match in matches {
+            let sorted = sort_classes(&class_match.content);
+            
+            // Only replace if sorting changed the content
+            if sorted != class_match.content {
+                let start = (class_match.start as i32 + offset) as usize;
+                let end = (class_match.end as i32 + offset) as usize;
+                
+                result.replace_range(start..end, &sorted);
+                
+                // Update offset for next replacements
+                offset += sorted.len() as i32 - class_match.content.len() as i32;
+            }
+        }
+
+        // Return the formatted text if changes were made
+        if result != file_text {
+            Ok(Some(result.into_bytes()))
+        } else {
+            Ok(None)
+        }
     }
 }
 

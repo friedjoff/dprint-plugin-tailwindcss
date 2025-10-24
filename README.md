@@ -42,23 +42,23 @@ Following [dprint Wasm plugin development docs](https://github.com/dprint/dprint
 
 ### 4. TailwindCSS Class Sorting Logic
 
-- [ ] Parse TailwindCSS configuration (if provided)
+- [x] Parse TailwindCSS configuration (if provided)
   - Load and parse `tailwind.config.js` to understand custom utilities
   - Extract custom class prefixes and modifiers
-- [ ] Implement class name detection:
+- [x] Implement class name detection:
   - Find class attributes in HTML/JSX/Vue/Svelte templates
   - Find utility function calls (e.g., `clsx()`, `classnames()`)
   - Support template literals and string concatenation
-- [ ] Implement sorting algorithm:
+- [x] Implement sorting algorithm:
   - Base utilities (layout, spacing, etc.) first
   - Modifiers (hover, focus, responsive breakpoints) in consistent order
   - Custom classes last
   - Preserve variant order (e.g., `dark:hover:` before class name)
-- [ ] Handle special cases:
+- [x] Handle special cases:
   - Arbitrary values (e.g., `w-[100px]`)
   - Important modifier (`!`)
   - Negative values (e.g., `-mt-4`)
-- [ ] **Verify:** Create test cases with unsorted classes and confirm output matches expected order: `"z-10 p-4 mt-2"` becomes `"mt-2 p-4 z-10"` (following TailwindCSS recommended order)
+- [x] **Verify:** Create test cases with unsorted classes and confirm output matches expected order: `"z-10 p-4 mt-2"` becomes `"mt-2 p-4 z-10"` (following TailwindCSS recommended order)
 
 ### 5. File Format Support
 

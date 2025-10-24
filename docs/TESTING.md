@@ -1,4 +1,4 @@
-# Quick Reference: Configuration Testing
+# Quick Reference: Testing
 
 ## Run All Tests
 
@@ -8,28 +8,41 @@ cargo test --lib --target x86_64-unknown-linux-gnu
 
 # Configuration validation
 ./test-config.sh
+
+# Sorting logic validation
+./test-sorting.sh
 ```
 
 ## Test Results Summary
 
-✅ **13/13 tests passing**
+✅ **50/50 tests passing**
+
+### Sorter Tests (23 tests)
+- ✅ Class parsing (simple, important, negative, arbitrary, variants)
+- ✅ Sorting algorithm (simple, complex, mixed)
+- ✅ Category priority (layout, spacing, typography)
+- ✅ Variant priority (responsive, state)
+- ✅ Real-world examples
+
+### Extractor Tests (14 tests)
+- ✅ HTML attribute extraction (class, className)
+- ✅ Function call extraction (clsx, classnames, cn)
+- ✅ JSX expression extraction
+- ✅ Position tracking
+- ✅ Real-world examples (React, Vue)
 
 ### Configuration Tests (8 tests)
-- ✅ `test_default_config` - Default values are correct
-- ✅ `test_resolve_config_empty` - Empty config uses defaults
-- ✅ `test_resolve_config_with_custom_values` - Custom values parsed correctly
-- ✅ `test_resolve_config_with_all_custom_values` - All options can be customized
-- ✅ `test_resolve_config_with_invalid_type` - Invalid types fall back to defaults
-- ✅ `test_resolve_config_with_unknown_properties` - Unknown properties reported
-- ✅ `test_resolve_config_with_invalid_array_elements` - Invalid arrays handled
-- ✅ `test_file_matching_extensions` - All file extensions registered
+- ✅ Default configuration
+- ✅ Custom values
+- ✅ Invalid types handling
+- ✅ Unknown properties detection
+- ✅ File matching extensions
 
 ### Plugin Tests (5 tests)
-- ✅ `test_plugin_info` - Plugin metadata correct
-- ✅ `test_license_text` - License text available
-- ✅ `test_resolve_config_default` - Default config through plugin
-- ✅ `test_resolve_config_custom` - Custom config through plugin
-- ✅ `test_check_config_updates` - Config update mechanism works
+- ✅ Plugin info
+- ✅ License text
+- ✅ Config resolution
+- ✅ Config updates
 
 ## Configuration Schema
 
@@ -46,6 +59,16 @@ interface TailwindCSSConfig {
 
 `.html`, `.htm`, `.jsx`, `.tsx`, `.vue`, `.svelte`, `.astro`
 
+## Sorting Examples
+
+```
+"z-10 p-4 mt-2" → "mt-2 p-4 z-10"
+"hover:bg-blue-500 bg-red-500" → "bg-red-500 hover:bg-blue-500"
+"!text-red-500 text-blue-500" → "text-blue-500 !text-red-500"
+"-mt-4 mt-4 pt-4" → "mt-4 -mt-4 pt-4"
+"w-[100px] w-full" → "w-full w-[100px]"
+```
+
 ## Example Configurations
 
 See `test-configs/` directory for examples:
@@ -57,10 +80,12 @@ See `test-configs/` directory for examples:
 
 ## Documentation
 
-- Full documentation: `docs/CONFIGURATION.md`
-- Implementation summary: `docs/STEP_3_SUMMARY.md`
+- Configuration: `docs/CONFIGURATION.md`
+- Step 3 Summary: `docs/STEP_3_SUMMARY.md`
+- Step 4 Summary: `docs/STEP_4_SUMMARY.md`
 - Core plugin structure: `docs/CORE_PLUGIN_STRUCTURE.md`
 
 ## Status
 
 ✅ **Step 3: Configuration Options - COMPLETED**
+✅ **Step 4: TailwindCSS Class Sorting Logic - COMPLETED**
