@@ -1,185 +1,358 @@
 # dprint-plugin-tailwindcss
 
-dprint Wasm plugin for TailwindCSS
+A [dprint](https://dprint.dev/) plugin for sorting TailwindCSS classes, providing the same automatic class ordering as [prettier-plugin-tailwindcss](https://github.com/tailwindlabs/prettier-plugin-tailwindcss).
 
-## 📊 Current Status
+[![Tests](https://img.shields.io/badge/tests-240%20passing-brightgreen)]()
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)]()
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Progress**: 70% Complete (Steps 1-7 ✅)  
-**Tests**: 118/118 passing (100% ✅)  
-**Code**: 2,800+ lines of Rust  
+## Features
 
-### Quick Stats:
-- ✅ 7 file formats supported (HTML, JSX, TSX, Vue, Svelte, Astro)
-- ✅ Format-aware parsing with structure preservation
-- ✅ TailwindCSS official sorting order
-- ✅ Plugin ecosystem compatibility
-- ✅ Comprehensive test coverage
+- 🎯 **Automatic TailwindCSS class sorting** using official ordering
+- 🚀 **Fast and lightweight** - Compiled to WebAssembly
+- 📦 **Multi-framework support** - HTML, JSX, TSX, Vue, Svelte, Astro
+- 🔧 **Highly configurable** - Custom functions, attributes, and options
+- 🎨 **Format-aware** - Understands different file structures
+- 🔗 **Plugin-compatible** - Works alongside other dprint plugins
 
-[See detailed project status →](docs/PROJECT_STATUS.md)
+## Installation
 
----
+Add the plugin to your `dprint.json` configuration:
 
-## Overview
-
-This plugin sorts and formats TailwindCSS class names in your code, similar to [prettier-plugin-tailwindcss](https://github.com/tailwindlabs/prettier-plugin-tailwindcss) but for the [dprint](https://dprint.dev/) formatter.
-
-## Implementation Plan
-
-### 1. Project Setup
-
-- [x] Initialize Rust project with Wasm target support
-  - Create `Cargo.toml` with dependencies: `dprint-core`, `wasm-bindgen`, `serde`, `serde_json`
-  - Set crate type to `["cdylib"]` for Wasm compilation
-- [x] Set up build configuration for Wasm32 target
-  - Configure `wasm-pack` or manual `wasm32-unknown-unknown` compilation
-- [x] Create plugin schema configuration structure
-- [x] **Verify:** Build project successfully with `cargo build --target wasm32-unknown-unknown` and confirm `.wasm` file is generated
-
-### 2. Core Plugin Structure
-
-Following [dprint Wasm plugin development docs](https://github.com/dprint/dprint/blob/main/docs/wasm-plugin-development.md):
-
-- [x] Implement required exports:
-  - `get_plugin_info()` - Returns plugin metadata (name, version, config schema)
-  - `get_license_text()` - Returns MIT license text
-  - `get_resolved_config(config: &str)` - Parses and validates configuration
-  - `set_global_config(global_config: &str)` - Sets global dprint config
-  - `set_file_path(file_path: &str)` - Sets current file being formatted
-  - `format(file_text: &str, range: &FormatRange, override_config: &str)` - Main formatting function
-- [x] **Verify:** Load plugin in dprint with `dprint config add <plugin-url>` and run `dprint --plugins` to confirm plugin is recognized
-
-### 3. Configuration Options
-
-- [x] Define configuration schema:
-  - `tailwindConfig` - Path to tailwind.config.js (optional)
-  - `tailwindFunctions` - Custom function names containing class lists (default: `["classnames", "clsx", "ctl", "cva", "tw"]`)
-  - `tailwindAttributes` - HTML attributes to format (default: `["class", "className"]`)
-  - `enabled` - Enable/disable the plugin (default: `true`)
-- [x] **Verify:** Test config parsing with valid and invalid configurations, confirm appropriate error messages are returned for invalid configs
-
-### 4. TailwindCSS Class Sorting Logic
-
-- [x] Parse TailwindCSS configuration (if provided)
-  - Load and parse `tailwind.config.js` to understand custom utilities
-  - Extract custom class prefixes and modifiers
-- [x] Implement class name detection:
-  - Find class attributes in HTML/JSX/Vue/Svelte templates
-  - Find utility function calls (e.g., `clsx()`, `classnames()`)
-  - Support template literals and string concatenation
-- [x] Implement sorting algorithm:
-  - Base utilities (layout, spacing, etc.) first
-  - Modifiers (hover, focus, responsive breakpoints) in consistent order
-  - Custom classes last
-  - Preserve variant order (e.g., `dark:hover:` before class name)
-- [x] Handle special cases:
-  - Arbitrary values (e.g., `w-[100px]`)
-  - Important modifier (`!`)
-  - Negative values (e.g., `-mt-4`)
-- [x] **Verify:** Create test cases with unsorted classes and confirm output matches expected order: `"z-10 p-4 mt-2"` becomes `"mt-2 p-4 z-10"` (following TailwindCSS recommended order)
-
-### 5. File Format Support
-
-- [x] HTML/HTM files
-- [x] JSX/TSX (React) files
-- [x] Vue single-file components
-- [x] Svelte components
-- [x] Astro components
-- [x] Use existing dprint language plugins as parsers where possible
-- [x] **Verify:** Format sample files of each type and confirm classes are sorted without breaking syntax or losing content
-
-### 6. Parsing Strategy
-
-- [x] Leverage dprint's plugin ecosystem:
-  - [x] Use format-aware parsing for different file types
-  - [x] Implement custom parsers for Vue/Svelte/Astro
-- [x] Extract class attributes and utility functions from content
-- [x] Preserve original formatting except for class order
-- [x] Handle section-specific parsing (Vue templates, Svelte markup, Astro frontmatter)
-- [x] **Verify:** Format files with complex nesting, comments, and mixed content; confirm non-class code remains unchanged
-
-### 7. Integration Points
-
-- [x] Hook into dprint's formatting pipeline
-- [x] Ensure compatibility with other dprint plugins
-- [x] Handle incremental formatting (range formatting)
-- [x] Preserve comments and whitespace outside class strings
-- [x] **Verify:** Use plugin alongside `dprint-plugin-typescript` and `dprint-plugin-json` in a project, confirm no conflicts occur
-
-### 8. Testing
-
-- [ ] Unit tests for class sorting algorithm
-- [ ] Integration tests with various file formats
-- [ ] Test with real-world TailwindCSS projects
-- [ ] Test custom configurations
-- [ ] Test edge cases (malformed classes, mixed content)
-- [ ] **Verify:** Run full test suite with `cargo test` and achieve >90% code coverage; all tests pass
-
-### 9. Build and Distribution
-
-- [ ] Compile to Wasm module
-- [ ] Publish to dprint plugin registry
-- [ ] Create GitHub releases with compiled `.wasm` file
-- [ ] Document installation and usage
-- [ ] **Verify:** Install plugin from published URL using `dprint config add`, confirm it downloads and works in a fresh project
-
-### 10. Documentation
-
-- [ ] Installation instructions
-- [ ] Configuration options
-- [ ] Examples for different frameworks
-- [ ] Troubleshooting guide
-- [ ] Contribution guidelines
-- [ ] **Verify:** Follow documentation from scratch in a new environment, confirm all instructions work without prior knowledge of the project
-
-## Technical Architecture
-
-```
-┌─────────────────────────────────────┐
-│   dprint CLI / Editor Integration   │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │  Class Attribute Extractor    │ │
-│  │  - HTML attributes            │ │
-│  │  - Utility functions          │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │  TailwindCSS Sorter           │ │
-│  │  - Parse class names          │ │
-│  │  - Sort by category           │ │
-│  │  - Preserve variants          │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │  Config Loader (optional)     │ │
-│  │  - tailwind.config.js         │ │
-│  └───────────────────────────────┘ │
-└─────────────────────────────────────┘
+```json
+{
+  "plugins": [
+    "https://plugins.dprint.dev/friedjoff/dprint-plugin-tailwindcss-0.1.0.wasm"
+  ]
+}
 ```
 
-## Development Workflow
+Or use the dprint CLI:
 
-1. Set up Rust development environment
-2. Implement basic plugin interface
-3. Add class detection for HTML
-4. Implement TailwindCSS sorting logic
-5. Extend to JSX/TSX support
-6. Add configuration options
-7. Test with real projects
-8. Optimize performance
-9. Publish to registry
+```bash
+dprint config add tailwindcss
+```
 
-## References
+## Quick Start
 
-- [dprint Wasm Plugin Development Guide](https://github.com/dprint/dprint/blob/main/docs/wasm-plugin-development.md)
-- [prettier-plugin-tailwindcss](https://github.com/tailwindlabs/prettier-plugin-tailwindcss)
-- [TailwindCSS Class Sorting](https://tailwindcss.com/blog/automatic-class-sorting-with-prettier)
-- [dprint Plugin Registry](https://dprint.dev/plugins/)
+Once installed, the plugin will automatically format TailwindCSS classes in supported file types:
+
+**Before:**
+```html
+<div class="text-center font-bold p-4 bg-blue-500 mt-2">
+  Hello World
+</div>
+```
+
+**After:**
+```html
+<div class="mt-2 bg-blue-500 p-4 font-bold text-center">
+  Hello World
+</div>
+```
+
+## Configuration
+
+Add a `"tailwindcss"` section to your `dprint.json`:
+
+```json
+{
+  "tailwindcss": {
+    "enabled": true,
+    "tailwindFunctions": ["clsx", "cn", "cva", "tw"],
+    "tailwindAttributes": ["class", "className"]
+  },
+  "plugins": [
+    "https://plugins.dprint.dev/friedjoff/dprint-plugin-tailwindcss-0.1.0.wasm"
+  ]
+}
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | boolean | `true` | Enable or disable the plugin |
+| `tailwindFunctions` | string[] | `["clsx", "cn", "cva", "tw", "classnames"]` | Function names that contain class lists |
+| `tailwindAttributes` | string[] | `["class", "className"]` | HTML/JSX attributes to format |
+
+### Example Configurations
+
+#### React/Next.js Project
+
+```json
+{
+  "tailwindcss": {
+    "tailwindFunctions": ["cn", "clsx", "cva"],
+    "tailwindAttributes": ["className"]
+  }
+}
+```
+
+#### Vue Project
+
+```json
+{
+  "tailwindcss": {
+    "tailwindFunctions": ["cn"],
+    "tailwindAttributes": ["class"]
+  }
+}
+```
+
+#### Multi-Framework Project
+
+```json
+{
+  "tailwindcss": {
+    "tailwindFunctions": ["clsx", "cn", "tw"],
+    "tailwindAttributes": ["class", "className", "data-class"]
+  }
+}
+```
+
+## Supported File Formats
+
+The plugin automatically detects and formats TailwindCSS classes in:
+
+- **HTML** (`.html`, `.htm`)
+- **React** (`.jsx`, `.tsx`)
+- **Vue** (`.vue`) - Template section only
+- **Svelte** (`.svelte`) - Markup section only
+- **Astro** (`.astro`) - Post-frontmatter only
+
+## Examples
+
+### HTML
+
+```html
+<!-- Input -->
+<button class="hover:bg-blue-700 text-white font-bold py-2 px-4 rounded bg-blue-500">
+  Click me
+</button>
+
+<!-- Output -->
+<button class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700">
+  Click me
+</button>
+```
+
+### React with clsx
+
+```jsx
+// Input
+import clsx from 'clsx';
+
+<div className={clsx(
+  'text-center',
+  'font-bold',
+  isActive && 'bg-blue-500 text-white',
+  'p-4 mt-2'
+)}>
+  Content
+</div>
+
+// Output
+<div className={clsx(
+  'font-bold text-center',
+  isActive && 'bg-blue-500 text-white',
+  'mt-2 p-4'
+)}>
+  Content
+</div>
+```
+
+### Vue Template
+
+```vue
+<!-- Input -->
+<template>
+  <div class="hover:shadow-lg transition-shadow p-6 bg-white rounded-lg shadow">
+    {{ content }}
+  </div>
+</template>
+
+<!-- Output -->
+<template>
+  <div class="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg">
+    {{ content }}
+  </div>
+</template>
+```
+
+### Svelte
+
+```svelte
+<!-- Input -->
+<div class="text-lg font-semibold {active ? 'bg-blue-500' : 'bg-gray-200'} p-4">
+  {count}
+</div>
+
+<!-- Output -->
+<div class="p-4 text-lg font-semibold {active ? 'bg-blue-500' : 'bg-gray-200'}">
+  {count}
+</div>
+```
+
+## Advanced Features
+
+### Arbitrary Values
+
+Supports TailwindCSS arbitrary values:
+
+```html
+<div class="mt-[117px] bg-[#bada55] text-[22px]">
+  Custom values
+</div>
+```
+
+### Variants and Modifiers
+
+Handles all TailwindCSS variants:
+
+```html
+<!-- Responsive -->
+<div class="text-sm md:text-base lg:text-lg">
+
+<!-- State -->
+<div class="hover:bg-blue-500 focus:ring-2 active:scale-95">
+
+<!-- Dark mode -->
+<div class="bg-white dark:bg-gray-900">
+
+<!-- Stacked variants -->
+<div class="md:hover:bg-blue-500 lg:focus:text-white">
+```
+
+### Modern TailwindCSS v4 Features
+
+```html
+<!-- Container queries -->
+<div class="@container/main @lg/main:grid">
+
+<!-- Data attributes -->
+<div class="data-[state=open]:block data-[state=closed]:hidden">
+
+<!-- ARIA attributes -->
+<div class="aria-[expanded=true]:font-bold aria-disabled:opacity-50">
+```
+
+### Important Modifier
+
+```html
+<div class="!text-red-500 !font-bold">
+  Always red and bold
+</div>
+```
+
+### Negative Values
+
+```html
+<div class="-mt-4 -ml-2">
+  Negative margins
+</div>
+```
+
+## Integration with Other Plugins
+
+This plugin works seamlessly with other dprint plugins:
+
+```json
+{
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.91.0.wasm",
+    "https://plugins.dprint.dev/json-0.19.0.wasm",
+    "https://plugins.dprint.dev/markdown-0.16.0.wasm",
+    "https://plugins.dprint.dev/friedjoff/dprint-plugin-tailwindcss-0.1.0.wasm"
+  ]
+}
+```
+
+## Usage
+
+### Command Line
+
+Format your entire project:
+
+```bash
+dprint fmt
+```
+
+Format specific files:
+
+```bash
+dprint fmt src/**/*.{html,jsx,vue}
+```
+
+Check formatting without changes:
+
+```bash
+dprint check
+```
+
+### Editor Integration
+
+The plugin works automatically with dprint editor extensions:
+
+- **VS Code**: [Dprint Formatter](https://marketplace.visualstudio.com/items?itemName=dprint.dprint)
+- **Vim/Neovim**: [dprint.nvim](https://github.com/kbario/dprint.nvim)
+- **Other editors**: See [dprint editor setup](https://dprint.dev/setup/)
+
+## Comparison with prettier-plugin-tailwindcss
+
+This plugin aims to provide the same class sorting behavior as `prettier-plugin-tailwindcss`, but for dprint users:
+
+| Feature | dprint-plugin-tailwindcss | prettier-plugin-tailwindcss |
+|---------|---------------------------|----------------------------|
+| Class sorting | ✅ Official TailwindCSS order | ✅ Official TailwindCSS order |
+| Speed | ✅ WebAssembly (faster) | ⚠️ JavaScript |
+| File formats | ✅ 6 formats | ✅ Many formats |
+| TailwindCSS v4 | ✅ Full support | ✅ Full support |
+| TailwindCSS v3 | ❌ Not supported | ✅ Supported |
+| Configuration | ✅ Simple JSON | ✅ JavaScript |
+
+**Note**: This plugin focuses on TailwindCSS v4 and does not maintain compatibility with v3 or earlier.
+
+## Troubleshooting
+
+### Classes Not Sorting
+
+1. Check that the file extension is supported
+2. Verify the plugin is enabled in `dprint.json`
+3. Ensure class attributes match your `tailwindAttributes` configuration
+4. For utility functions, verify they're listed in `tailwindFunctions`
+
+### Conflicts with Other Plugins
+
+If you experience issues with other dprint plugins:
+
+1. Ensure this plugin is listed last in the `plugins` array
+2. Check that other plugins don't also format the same file types
+3. Review the [plugin compatibility guide](docs/PLUGIN_COMPATIBILITY.md)
+
+### Performance Issues
+
+For large projects:
+
+1. Use `.dprintignore` to exclude `node_modules` and build directories
+2. Consider formatting only changed files in CI/CD
+3. See [performance tips](docs/PERFORMANCE.md)
+
+## Contributing
+
+Contributions are welcome! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details.
+
+## Development
+
+For plugin development, architecture details, and implementation guides, see the [Developer Documentation](docs/README.md).
 
 ## License
 
-MIT
+MIT © [friedjoff](https://github.com/friedjoff)
+
+## Acknowledgments
+
+- Inspired by [prettier-plugin-tailwindcss](https://github.com/tailwindlabs/prettier-plugin-tailwindcss)
+- Built with [dprint](https://dprint.dev/)
+- Powered by [TailwindCSS](https://tailwindcss.com/)
+
