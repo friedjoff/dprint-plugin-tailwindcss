@@ -1,6 +1,7 @@
 mod config;
 mod sorter;
 mod extractor;
+mod parser;
 
 use dprint_core::configuration::{ConfigKeyMap, GlobalConfiguration};
 #[cfg(target_arch = "wasm32")]
@@ -12,6 +13,7 @@ use dprint_core::plugins::{
 
 use config::Configuration;
 use extractor::ClassExtractor;
+use parser::{FileFormat, FormatParser};
 use sorter::sort_classes;
 
 struct TailwindCssPluginHandler;
@@ -64,14 +66,27 @@ impl SyncPluginHandler<Configuration> for TailwindCssPluginHandler {
         let file_text = String::from_utf8(request.file_bytes.to_vec())
             .map_err(|e| anyhow::anyhow!("Failed to parse file as UTF-8: {}", e))?;
 
+        // Determine file format from path
+        let file_path = request.file_path.to_string_lossy();
+        let format = FileFormat::from_path(&file_path);
+
         // Create extractor with configured function and attribute names
         let extractor = ClassExtractor::new(
             request.config.tailwind_functions.clone(),
             request.config.tailwind_attributes.clone(),
         );
 
-        // Extract all class strings from the file
-        let matches = extractor.extract_all(&file_text);
+        // Extract all class strings using format-aware parsing
+        let matches = if let Some(format) = format {
+            let parser = FormatParser::new(extractor);
+            parser.parse(&file_text, format)
+        } else {
+            // Fallback to basic extraction if format is unknown
+            let mut matches = extractor.extract_from_attributes(&file_text);
+            let function_matches = extractor.extract_from_functions(&file_text);
+            matches.extend(function_matches);
+            matches
+        };
 
         // If no matches found, return unchanged
         if matches.is_empty() {
@@ -190,3 +205,6 @@ mod tests {
 
 #[cfg(test)]
 mod integration_tests;
+
+#[cfg(test)]
+mod format_aware_tests;
